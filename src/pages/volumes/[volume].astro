@@ -1,0 +1,407 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Book3D from '../../components/Book3D.astro';
+import { getCollection } from 'astro:content';
+import { VOLUMES, type VolumeMeta } from '../../data/volumes';
+
+export async function getStaticPaths() {
+  return VOLUMES.map((volume) => ({
+    params: { volume: volume.id },
+    props: { volume },
+  }));
+}
+
+interface Props {
+  volume: VolumeMeta;
+}
+
+const { volume } = Astro.props;
+const allNotes = await getCollection('notes');
+const volumeNotes = allNotes
+  .filter((n) => n.data.volume === volume.id)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const firstNote = volumeNotes[0];
+const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 'spring' ? '#4D6658' : volume.coverBg;
+---
+
+<BaseLayout title={`${volume.title} — Pebble Press`}>
+  <div class="bg-[#f9f7f1]">
+    <!-- Editorial Book Prospectus Hero -->
+    <section class="border-b border-[#e4e0d5]">
+      <div class="max-w-[1380px] mx-auto px-5 sm:px-10 pt-7 pb-16">
+        <div class="mb-9 flex items-center justify-between font-mono-meta text-[11px] tracking-[0.14em] uppercase text-[#757268]">
+          <a href="/#volumes" class="inline-flex items-center gap-1.5 hover:text-[#141820] transition">
+            <span>←</span>
+            <span>[ VOLUMES ]</span>
+          </a>
+          <span>VOL. {volume.number}</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+          <!-- 360° Interactive Hardcover Display (0KB Three.js subpage!) -->
+          <div class="md:col-span-5 flex flex-col items-center">
+            <div
+              id="detail-book-stage"
+              class="book3d-stage relative w-full flex items-center justify-center pt-4 pb-14 cursor-grab active:cursor-grabbing"
+            >
+              <canvas
+                id="detail-shadow-canvas"
+                class="pointer-events-none absolute left-0 right-0 w-full"
+                style="z-index: 1;"
+              ></canvas>
+              <div class="relative z-10 flex items-center justify-center" style="transform-style: preserve-3d;">
+                <Book3D volume={volume} size="lg" idPrefix="detail-book" />
+              </div>
+            </div>
+
+            <div class="mt-2 flex items-center gap-4 font-mono-meta text-[10.5px] tracking-[0.12em] uppercase text-[#757268]">
+              <button id="detail-flip-btn" type="button" class="hover:text-[#141820] transition cursor-pointer">
+                [ ↻ 翻转书背 ]
+              </button>
+              <button id="detail-spine-btn" type="button" class="hover:text-[#141820] transition cursor-pointer">
+                [ 查看书脊 ]
+              </button>
+            </div>
+          </div>
+
+          <!-- Fine-Press Book Prospectus -->
+          <div class="md:col-span-7 space-y-6">
+            <div>
+              <div class="font-mono-meta text-[11px] uppercase tracking-[0.18em] text-[#757268]">
+                VOL. {volume.number} · {volume.authorLine}
+              </div>
+              <h1 class="font-editorial text-5xl sm:text-[4.25rem] font-bold tracking-[-0.02em] text-[#11151d] mt-2 leading-[0.98]">
+                {volume.title}
+              </h1>
+              <p class="font-book-serif italic text-xl text-[#5c626d] mt-3">
+                {volume.subtitle}
+              </p>
+            </div>
+
+            <div class="editorial-double-rule max-w-xl"></div>
+
+            <p class="text-[15.5px] leading-[1.9] text-[#3f4652] max-w-2xl">
+              {volume.description}
+            </p>
+
+            <div class="border-y border-[#e2ded3] py-4 grid grid-cols-3 gap-6 text-xs max-w-lg">
+              <div>
+                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#757268]">BINDING</div>
+                <div class="mt-1.5 font-medium text-[#141820] flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full inline-block" style={`background:${accentInk};`}></span>
+                  <span>{volume.clothName}</span>
+                </div>
+              </div>
+              <div>
+                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#757268]">CHAPTERS</div>
+                <div class="mt-1.5 font-mono-meta font-semibold text-[#141820]">
+                  {String(volumeNotes.length).padStart(2, '0')} 篇
+                </div>
+              </div>
+              <div>
+                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#757268]">MASTERED</div>
+                <div id="vol-mastery-stat" class="mt-1.5 font-mono-meta font-semibold" style={`color:${accentInk};`}>
+                  0 / {volumeNotes.length}
+                </div>
+              </div>
+            </div>
+
+            {firstNote && (
+              <div class="pt-1">
+                <a
+                  href={`/notes/${firstNote.id}`}
+                  class="inline-flex items-center gap-2.5 px-6 py-2.5 font-mono-meta text-xs tracking-[0.14em] uppercase bg-[#141820] text-[#f9f7f1] hover:bg-[#252c3b] transition"
+                >
+                  <span>START READING</span>
+                  <span>→</span>
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Museum-Clean Unboxed Literary Table of Contents -->
+    <section id="toc" class="max-w-4xl mx-auto px-5 sm:px-10 py-16">
+      <div class="flex items-baseline justify-between pb-5 border-b border-[#181c24]">
+        <div class="flex items-baseline gap-3">
+          <span class="font-mono-meta text-[11px] uppercase tracking-[0.16em] text-[#757268]">
+            [ TABLE OF CONTENTS ]
+          </span>
+          <h2 class="font-editorial text-2xl sm:text-3xl font-bold text-[#11151d]">
+            本册篇目
+          </h2>
+        </div>
+        <span class="font-mono-meta text-[11px] text-[#757268]">
+          {String(volumeNotes.length).padStart(2, '0')} CHAPTERS
+        </span>
+      </div>
+
+      <div class="divide-y divide-[#e4e0d5]">
+        {volumeNotes.map((note, idx) => (
+          <a
+            href={`/notes/${note.id}`}
+            data-vol-note-slug={note.id}
+            class="group block py-8 transition"
+          >
+            <div class="grid grid-cols-12 gap-4 items-baseline">
+              <div class="col-span-2 sm:col-span-1 flex items-center gap-2">
+                <span class="font-editorial text-2xl font-semibold text-[#9a9588] group-hover:text-[#141820] transition">
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+              </div>
+
+              <div class="col-span-10 sm:col-span-9 space-y-2">
+                <div class="flex flex-wrap items-center gap-3">
+                  <h3 class="font-editorial text-2xl font-bold text-[#141820] group-hover:underline underline-offset-4 decoration-[#bfb9aa] transition">
+                    {note.data.title}
+                  </h3>
+                  <span data-vol-check={note.id} class="font-mono-meta text-xs" style={`color:${accentInk};`}></span>
+                </div>
+
+                <p class="text-[14.5px] text-[#525864] leading-relaxed">
+                  {note.data.summary}
+                </p>
+
+                <div class="flex flex-wrap items-center gap-3 pt-1 font-mono-meta text-[11px] text-[#757268]">
+                  <span class="inline-flex items-center gap-1.5" style={`color:${accentInk};`}>
+                    <span class="w-1.5 h-1.5 rounded-full inline-block" style={`background:${accentInk};`}></span>
+                    <span>{note.data.frequency}</span>
+                  </span>
+                  {note.data.tags.length > 0 && (
+                    <>
+                      <span class="opacity-40">·</span>
+                      <span>{note.data.tags.join(' / ')}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div class="hidden sm:flex col-span-2 flex-col items-end justify-between gap-2 font-mono-meta text-[11px] text-[#757268]">
+                <span>{note.data.readTime}</span>
+                <span class="text-[#141820] opacity-0 group-hover:opacity-100 transition">READ →</span>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const stage = document.getElementById('detail-book-stage');
+  const book = stage?.querySelector('[data-book3d]') as HTMLElement | null;
+  const glare = stage?.querySelector('[data-glare]') as HTMLElement | null;
+  const canvas = document.getElementById('detail-shadow-canvas') as HTMLCanvasElement | null;
+  const ctx = canvas?.getContext('2d', { alpha: true });
+  const flipBtn = document.getElementById('detail-flip-btn');
+  const spineBtn = document.getElementById('detail-spine-btn');
+
+  if (stage && book) {
+    const sprite = document.createElement('canvas');
+    sprite.width = 160;
+    sprite.height = 140;
+    const sctx = sprite.getContext('2d');
+    if (sctx) {
+      sctx.filter = 'blur(10px)';
+      const grad = sctx.createLinearGradient(0, 14, 0, 126);
+      grad.addColorStop(0, 'rgba(19, 23, 32, 0.34)');
+      grad.addColorStop(0.55, 'rgba(19, 23, 32, 0.14)');
+      grad.addColorStop(1, 'rgba(19, 23, 32, 0)');
+      sctx.fillStyle = grad;
+      sctx.fillRect(22, 14, 116, 108);
+    }
+
+    let stageW = 460;
+    let bookW = 290;
+    let bookH = 420;
+    let bookD = 54;
+    let ry = -16;
+    let rx = 3;
+    let targetRy = -16;
+    let targetRx = 3;
+    let hoverRy = 0;
+    let hoverRx = 0;
+    let lightX = -0.35;
+    let targetLightX = -0.35;
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startRy = 0;
+    let startRx = 0;
+    let rafId: number | null = null;
+    let viewMode: 'front' | 'back' | 'spine' = 'front';
+
+    function measure() {
+      const rect = stage!.getBoundingClientRect();
+      stageW = Math.max(280, Math.round(rect.width));
+      const bStyle = getComputedStyle(book!);
+      bookH = parseFloat(bStyle.height) || 420;
+      bookW = parseFloat(bStyle.width) || 286;
+      bookD = bookH * 0.128;
+
+      if (canvas) {
+        canvas.width = stageW;
+        canvas.height = 120;
+        canvas.style.top = `${Math.round(bookH + 10)}px`;
+        canvas.style.height = '120px';
+      }
+      wake();
+    }
+
+    function drawShadow() {
+      if (!ctx || !canvas) return;
+      ctx.clearRect(0, 0, stageW, 120);
+      const rad = (ry * Math.PI) / 180;
+      const projW = Math.abs(Math.cos(rad)) * bookW + Math.abs(Math.sin(rad)) * bookD;
+      const skew = Math.max(-0.85, Math.min(0.85, -lightX * 0.72));
+      ctx.save();
+      ctx.setTransform(1, 0, skew, 1, stageW / 2, 0);
+      ctx.drawImage(sprite, -projW * 0.62, -10, projW * 1.24, 112);
+      ctx.restore();
+    }
+
+    function tick() {
+      let moving = false;
+      const dlx = targetLightX - lightX;
+      if (Math.abs(dlx) > 0.002) {
+        lightX += dlx * 0.14;
+        moving = true;
+      } else {
+        lightX = targetLightX;
+      }
+
+      const ease = dragging ? 0.26 : 0.12;
+      const goalRy = targetRy + (dragging ? 0 : hoverRy);
+      const goalRx = targetRx + (dragging ? 0 : hoverRx);
+
+      if (Math.abs(goalRy - ry) > 0.04 || Math.abs(goalRx - rx) > 0.04) {
+        ry += (goalRy - ry) * ease;
+        rx += (goalRx - rx) * ease;
+        moving = true;
+      } else {
+        ry = goalRy;
+        rx = goalRx;
+      }
+
+      book!.style.transform = `translate3d(0, 0, 28px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+      drawShadow();
+
+      if (moving || dragging) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        rafId = null;
+      }
+    }
+
+    function wake() {
+      if (rafId === null) rafId = requestAnimationFrame(tick);
+    }
+
+    stage.closest('section')?.addEventListener('pointermove', (e) => {
+      const rect = stage.closest('section')!.getBoundingClientRect();
+      targetLightX = (((e as PointerEvent).clientX - rect.left) / rect.width) * 2 - 1;
+      wake();
+    });
+
+    stage.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startRy = targetRy;
+      startRx = targetRx;
+      stage.setPointerCapture?.(e.pointerId);
+      wake();
+    });
+
+    stage.addEventListener('pointermove', (e) => {
+      if (dragging) {
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        targetRy = startRy + dx * 0.62;
+        targetRx = Math.max(-28, Math.min(28, startRx - dy * 0.32));
+        wake();
+        return;
+      }
+      const rect = stage.getBoundingClientRect();
+      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+      hoverRy = nx * 10;
+      hoverRx = -ny * 7;
+      if (glare) {
+        glare.style.setProperty('--glare-x', `${Math.round(((nx + 1) / 2) * 100)}%`);
+        glare.style.setProperty('--glare-y', `${Math.round(((ny + 1) / 2) * 100)}%`);
+        glare.style.opacity = '1';
+      }
+      wake();
+    });
+
+    stage.addEventListener('pointerup', (e) => {
+      if (!dragging) return;
+      dragging = false;
+      stage.releasePointerCapture?.(e.pointerId);
+      wake();
+    });
+
+    stage.addEventListener('pointerleave', () => {
+      hoverRy = 0;
+      hoverRx = 0;
+      if (glare) glare.style.opacity = '0';
+      wake();
+    });
+
+    flipBtn?.addEventListener('click', () => {
+      if (viewMode === 'back') {
+        viewMode = 'front';
+        targetRy = -16;
+        targetRx = 3;
+        flipBtn.textContent = '[ ↻ 翻转书背 ]';
+      } else {
+        viewMode = 'back';
+        targetRy = 164;
+        targetRx = 3;
+        flipBtn.textContent = '[ ↺ 转回封面 ]';
+      }
+      wake();
+    });
+
+    spineBtn?.addEventListener('click', () => {
+      if (viewMode === 'spine') {
+        viewMode = 'front';
+        targetRy = -16;
+        targetRx = 3;
+      } else {
+        viewMode = 'spine';
+        targetRy = 80;
+        targetRx = 2;
+      }
+      wake();
+    });
+
+    window.addEventListener('resize', measure);
+    measure();
+  }
+
+  function syncVolumePage() {
+    const mastered = new Set(window.PebbleMastery?.getAll() || []);
+    const items = document.querySelectorAll('[data-vol-note-slug]');
+    let done = 0;
+
+    items.forEach((el) => {
+      const slug = el.getAttribute('data-vol-note-slug') || '';
+      const isDone = mastered.has(slug);
+      if (isDone) done += 1;
+      const check = el.querySelector(`[data-vol-check="${slug}"]`);
+      if (check) check.textContent = isDone ? '✓ 已掌握' : '';
+    });
+
+    const stat = document.getElementById('vol-mastery-stat');
+    if (stat) stat.textContent = `${done} / ${items.length}`;
+  }
+
+  syncVolumePage();
+  window.addEventListener('pebble:mastery-changed', syncVolumePage);
+</script>

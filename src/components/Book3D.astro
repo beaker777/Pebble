@@ -1,0 +1,507 @@
+---
+import type { VolumeMeta } from '../data/volumes';
+
+interface Props {
+  volume: VolumeMeta;
+  size?: 'hero' | 'lg';
+  idPrefix?: string;
+}
+
+const { volume, size = 'hero', idPrefix = 'book' } = Astro.props;
+const isHero = size === 'hero';
+---
+
+<div
+  class="book3d-object"
+  data-book3d
+  data-size={size}
+  data-volume-id={volume.id}
+  id={`${idPrefix}-${volume.id}`}
+>
+  <!-- ======================================================================
+       1. FRONT COVER — CRISP NATIVE HTML TYPOGRAPHY + MIDDLEWARE ARTWORK
+       ====================================================================== -->
+  <div
+    class="book3d-face book3d-front relative overflow-hidden"
+    style={`background-color: ${volume.coverBg}; color: ${volume.coverText};`}
+  >
+    <div class="book3d-glare" data-glare></div>
+
+    {/* ---------- 01. MySQL: Olive Buckram Monograph + InnoDB B+ Tree ---------- */}
+    {volume.designKey === 'mysql' && (
+      <div class="relative z-10 w-full h-full flex flex-col justify-between p-7 sm:p-9 pl-9 sm:pl-11">
+        <img
+          src="/covers/mysql-cloth.jpg"
+          alt=""
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 w-full h-full object-cover"
+        />
+
+        <!-- Signature top-right burnished gold cloth tab -->
+        <div
+          class="absolute top-0 right-5 w-10 h-12 flex items-center justify-center z-20"
+          style="background-color: #D9BC6E; color: #363B30;"
+        >
+          <svg class="w-5 h-6" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.85">
+            <rect x="4" y="3" width="16" height="24" rx="8" />
+            <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+            <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+          </svg>
+        </div>
+
+        <!-- Upper-left crisp editorial typography -->
+        <div class="relative z-10 mt-5 max-w-[210px]">
+          <h3 class:list={['font-editorial font-semibold tracking-tight leading-none', isHero ? 'text-[3.35rem]' : 'text-[2.65rem]']}>
+            MySQL
+          </h3>
+          <div class="w-7 h-[1px] my-3 opacity-65" style="background-color: #DFC06C;"></div>
+          <p class="font-book-serif italic text-[14.5px] leading-snug opacity-92">
+            Storage Engines,<br />B+ Trees &amp; MVCC
+          </p>
+        </div>
+
+        <!-- Crisp Vector 3-Tier InnoDB B+ Tree & Linked Leaf Chain -->
+        <svg
+          class="relative z-10 w-full max-w-[258px] my-auto opacity-90"
+          viewBox="0 0 260 132"
+          fill="none"
+          stroke="#E4C675"
+          stroke-width="1.1"
+          aria-hidden="true"
+        >
+          <!-- Root node -->
+          <rect x="94" y="6" width="72" height="15" />
+          <line x1="118" y1="6" x2="118" y2="21" />
+          <line x1="142" y1="6" x2="142" y2="21" />
+          <!-- Level 1 connectors -->
+          <path d="M106 21 V36 H52 V48 M130 21 V48 M154 21 V36 H208 V48" />
+          <!-- Internal nodes -->
+          <rect x="26" y="48" width="52" height="14" />
+          <line x1="52" y1="48" x2="52" y2="62" />
+          <rect x="104" y="48" width="52" height="14" />
+          <line x1="130" y1="48" x2="130" y2="62" />
+          <rect x="182" y="48" width="52" height="14" />
+          <line x1="208" y1="48" x2="208" y2="62" />
+          <!-- Level 2 connectors -->
+          <path d="M52 62 V80 H26 V92 M52 80 H78 V92 M130 62 V92 M208 62 V80 H182 V92 M208 80 H234 V92" />
+          <!-- 5 Clustered Leaf Pages -->
+          <rect x="7" y="92" width="38" height="20" />
+          <rect x="59" y="92" width="38" height="20" />
+          <rect x="111" y="92" width="38" height="20" />
+          <rect x="163" y="92" width="38" height="20" />
+          <rect x="215" y="92" width="38" height="20" />
+          <!-- Row lines inside leaf pages -->
+          <path d="M13 99 H39 M13 105 H33 M65 99 H91 M65 105 H85 M117 99 H143 M117 105 H137 M169 99 H195 M169 105 H189 M221 99 H247 M221 105 H241" stroke-opacity="0.55" />
+          <!-- Doubly-linked sequential scan pointers -->
+          <path d="M45 100 H59 M45 104 H59 M97 100 H111 M97 104 H111 M149 100 H163 M149 104 H163 M201 100 H215 M201 104 H215" />
+        </svg>
+
+        <!-- Quiet lower-left colophon -->
+        <div class="relative z-10 mb-1">
+          <p class="font-book-serif italic text-[14.5px] opacity-90">InnoDB Internals</p>
+          <p class="font-mono-meta text-[8.5px] tracking-[0.24em] uppercase opacity-60 mt-1">
+            PEBBLE PRESS
+          </p>
+        </div>
+      </div>
+    )}
+
+    {/* ---------- 02. Redis: Florentine Ebru Marbled Paper + SkipList Bookplate ---------- */}
+    {volume.designKey === 'redis' && (
+      <div class="relative z-10 w-full h-full flex flex-col items-center justify-between p-7 sm:p-9 pl-9 sm:pl-10">
+        <img
+          src="/covers/redis-ebru.jpg"
+          alt=""
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 w-full h-full object-cover"
+        />
+
+        <!-- Classical pasted antique ivory paper bookplate (cartouche) -->
+        <div
+          class:list={[
+            'relative z-10 w-full max-w-[252px] bg-[#F5EFE2] text-[#221715] p-1.5 shadow-[0_3px_14px_rgba(0,0,0,0.28)]',
+            isHero ? 'mt-9' : 'mt-6',
+          ]}
+        >
+          <div class="border border-[#6B2421]/75 p-1">
+            <div class="border border-[#C69747]/65 px-4 py-5 text-center space-y-2">
+              <div class="font-mono-meta text-[8px] tracking-[0.28em] uppercase text-[#6B2421]">
+                PEBBLE PRESS
+              </div>
+              <h3 class:list={['font-editorial font-bold tracking-[-0.015em] leading-none text-[#1D1412]', isHero ? 'text-[3.3rem]' : 'text-[2.6rem]']}>
+                Redis
+              </h3>
+              <div class="w-10 h-[1px] mx-auto bg-[#C69747] my-1.5"></div>
+              <p class="font-book-serif italic text-[13px] leading-snug text-[#463632]">
+                In-Memory Data Structures &amp; Caching
+              </p>
+
+              <!-- Crisp Vector 4-Level SkipList Tower Trace -->
+              <svg class="w-full max-w-[184px] mx-auto pt-3 pb-1" viewBox="0 0 200 54" fill="none" aria-hidden="true">
+                <!-- L0 baseline -->
+                <line x1="12" y1="46" x2="188" y2="46" stroke="#6B2421" stroke-width="1.1" />
+                <!-- Express skip lanes -->
+                <line x1="12" y1="10" x2="132" y2="10" stroke="#C69747" stroke-width="1.2" />
+                <line x1="12" y1="22" x2="188" y2="22" stroke="#C69747" stroke-width="1.15" />
+                <line x1="12" y1="34" x2="188" y2="34" stroke="#C69747" stroke-width="1.1" />
+                <!-- Probabilistic towers -->
+                <g stroke="#6B2421" stroke-width="1.1">
+                  <line x1="12" y1="46" x2="12" y2="10" />
+                  <line x1="72" y1="46" x2="72" y2="22" />
+                  <line x1="132" y1="46" x2="132" y2="10" />
+                  <line x1="188" y1="46" x2="188" y2="22" />
+                </g>
+                <g fill="#6B2421">
+                  <circle cx="12" cy="46" r="2.2" />
+                  <circle cx="42" cy="46" r="2.2" />
+                  <circle cx="72" cy="46" r="2.2" />
+                  <circle cx="102" cy="46" r="2.2" />
+                  <circle cx="132" cy="46" r="2.2" />
+                  <circle cx="160" cy="46" r="2.2" />
+                  <circle cx="188" cy="46" r="2.2" />
+                </g>
+                <g fill="#C69747">
+                  <circle cx="12" cy="10" r="2.8" />
+                  <circle cx="132" cy="10" r="2.8" />
+                  <circle cx="72" cy="22" r="2.5" />
+                  <circle cx="188" cy="22" r="2.5" />
+                  <circle cx="12" cy="34" r="2.2" />
+                  <circle cx="72" cy="34" r="2.2" />
+                  <circle cx="132" cy="34" r="2.2" />
+                  <circle cx="188" cy="34" r="2.2" />
+                </g>
+              </svg>
+
+              <div class="font-mono-meta text-[7.5px] tracking-[0.12em] uppercase text-[#6B2421]/75">
+                16,384 SLOTS · EVENT LOOP
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative z-10 mb-1">
+          <div class="w-8 h-9 rounded-[2px] bg-[#F5EFE2]/95 text-[#6B2421] flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
+            <svg class="w-4 h-5" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="4" y="3" width="16" height="24" rx="8" />
+              <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+              <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ---------- 03. JUC: 1960s Swiss Brutalist Grid + AQS CLH & CAS Block ---------- */}
+    {volume.designKey === 'juc' && (
+      <div class="relative z-10 w-full h-full flex flex-col justify-between bg-[#ECEAE1] text-[#141619] p-6 sm:p-7 pl-8 sm:pl-9">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b-[1.5px] border-[#141619] font-mono-meta text-[8.5px] tracking-[0.18em] uppercase">
+            <span>NO. 03</span>
+            <span>JAVA.UTIL.CONCURRENT</span>
+          </div>
+
+          <div class="pt-0.5">
+            <h3
+              class:list={[
+                'font-extrabold tracking-[-0.06em] leading-[0.86] text-[#141619]',
+                isHero ? 'text-[5.5rem]' : 'text-[4.4rem]',
+              ]}
+            >
+              JUC
+            </h3>
+            <p class="mt-2.5 text-[10.5px] font-semibold tracking-[0.04em] uppercase text-[#1D4491]">
+              Concurrency, Locks &amp; Executors
+            </p>
+          </div>
+        </div>
+
+        <!-- Swiss Bauhaus Stepped Thread Lanes + CAS Lock Block + CLH Queue -->
+        <div class="relative my-auto py-2 space-y-3">
+          <svg class="w-full h-auto block" viewBox="0 0 300 162" fill="none" aria-hidden="true">
+            <g stroke="#141619" stroke-opacity="0.18" stroke-width="0.9">
+              <line x1="0" y1="0" x2="0" y2="162" />
+              <line x1="60" y1="0" x2="60" y2="162" />
+              <line x1="120" y1="0" x2="120" y2="162" />
+              <line x1="180" y1="0" x2="180" y2="162" />
+              <line x1="240" y1="0" x2="240" y2="162" />
+              <line x1="300" y1="0" x2="300" y2="162" />
+            </g>
+            <rect x="0" y="6" width="142" height="22" fill="#141619" />
+            <rect x="154" y="6" width="84" height="22" fill="#1D4491" />
+
+            <rect x="48" y="38" width="180" height="22" fill="#1D4491" />
+            <rect x="240" y="38" width="60" height="22" fill="#141619" />
+
+            <rect x="0" y="70" width="90" height="22" fill="#1D4491" />
+            <rect x="102" y="70" width="198" height="22" fill="#141619" />
+
+            <!-- Highlighted CAS Critical Section Lock Block -->
+            <rect x="48" y="102" width="124" height="22" fill="#C68C32" />
+            <text x="58" y="116" fill="#141619" font-family="JetBrains Mono, monospace" font-size="8.5" font-weight="700">CAS · STATE = 1</text>
+            <rect x="184" y="102" width="116" height="22" fill="#1D4491" />
+
+            <rect x="0" y="134" width="204" height="22" fill="#141619" />
+            <rect x="216" y="134" width="48" height="22" fill="#C4452C" />
+          </svg>
+
+          <!-- Crisp HTML AQS CLH FIFO Queue Schematic -->
+          <div class="grid grid-cols-4 gap-2 pt-1 font-mono-meta text-[7.5px] font-semibold tracking-wider text-center">
+            <div class="border border-[#141619] py-1 text-[#1D4491]">HEAD</div>
+            <div class="border border-[#141619] py-1">NODE 01</div>
+            <div class="border border-[#141619] py-1">NODE 02</div>
+            <div class="border border-[#141619] py-1">TAIL</div>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-[#141619]/30 flex items-center justify-between font-mono-meta text-[8.5px] tracking-[0.16em] uppercase">
+          <span>AQS · CAS · POOL</span>
+          <span class="font-semibold">PEBBLE PRESS</span>
+        </div>
+      </div>
+    )}
+
+    {/* ---------- 04. Spring: Cotton Rag Dawn Watercolor + IoC Lifecycle Orbit ---------- */}
+    {volume.designKey === 'spring' && (
+      <div class="relative z-10 w-full h-full flex flex-col items-center justify-between p-5 sm:p-6 pl-7 sm:pl-8 text-[#1C2420]">
+        <img
+          src="/covers/spring-dawn.jpg"
+          alt=""
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 w-full h-full object-cover"
+        />
+
+        <!-- Whisper-thin gallery hairline frame -->
+        <div class="relative z-10 w-full h-full border border-[#1C2420]/18 flex flex-col items-center justify-between py-6 px-5 text-center overflow-hidden">
+          <svg class="w-4 h-5 opacity-75 shrink-0" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="4" y="3" width="16" height="24" rx="8" />
+            <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+            <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+          </svg>
+
+          <!-- Delicate Champagne-Gold IoC Container Orbit framing crisp HTML Spring title -->
+          <div class="relative flex flex-col items-center justify-center -mt-10 w-full">
+            <svg
+              class="pointer-events-none absolute w-[224px] h-[224px]"
+              viewBox="0 0 220 220"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="110" cy="110" r="98" stroke="#B68E44" stroke-opacity="0.65" stroke-width="1" />
+              <circle cx="110" cy="110" r="82" stroke="#B68E44" stroke-opacity="0.48" stroke-width="0.9" stroke-dasharray="3 5" />
+              <circle cx="110" cy="12" r="2.8" fill="#B68E44" />
+              <circle cx="208" cy="110" r="2.8" fill="#B68E44" />
+              <circle cx="110" cy="208" r="2.8" fill="#B68E44" />
+              <circle cx="12" cy="110" r="2.8" fill="#B68E44" />
+            </svg>
+
+            <span class="font-mono-meta text-[7.5px] tracking-[0.22em] uppercase text-[#3A4A42]/80 mb-5">
+              INSTANTIATE
+            </span>
+
+            <h3 class:list={['relative z-10 font-editorial font-semibold tracking-[0.02em] leading-none text-[#1A221E]', isHero ? 'text-[4rem]' : 'text-[3.1rem]']}>
+              Spring
+            </h3>
+            <p class="relative z-10 font-mono-meta text-[8px] tracking-[0.24em] uppercase text-[#36473E] mt-2">
+              IOC · AOP · TRANSACTIONS
+            </p>
+
+            <span class="font-mono-meta text-[7.5px] tracking-[0.22em] uppercase text-[#3A4A42]/80 mt-5">
+              INITIALIZE
+            </span>
+          </div>
+
+          <div class="font-book-serif italic text-[13.5px] text-[#1C2420]/85 tracking-wide">
+            Pebble Press
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+
+  <!-- ======================================================================
+       2. MINIMAL CENTERED BACK COVER
+       ====================================================================== -->
+  <div
+    class="book3d-face book3d-back relative overflow-hidden flex flex-col items-center justify-center p-10 text-center"
+    style={`background-color: ${volume.coverBg}; color: ${volume.coverText};`}
+  >
+    {volume.designKey === 'mysql' && (
+      <img
+        src="/covers/mysql-cloth.jpg"
+        alt=""
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 w-full h-full object-cover -scale-x-100 opacity-95"
+      />
+    )}
+    {volume.designKey === 'redis' && (
+      <img
+        src="/covers/redis-ebru.jpg"
+        alt=""
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 w-full h-full object-cover -scale-x-100"
+      />
+    )}
+    {volume.designKey === 'spring' && (
+      <img
+        src="/covers/spring-dawn.jpg"
+        alt=""
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 w-full h-full object-cover -scale-x-100"
+      />
+    )}
+
+    {volume.designKey === 'redis' ? (
+      <div class="relative z-10 bg-[#F5EFE2] text-[#221715] px-7 py-8 border border-[#6B2421]/55 shadow-[0_3px_12px_rgba(0,0,0,0.25)] space-y-3 max-w-[230px]">
+        <svg class="w-6 h-8 mx-auto text-[#6B2421]" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.65">
+          <rect x="4" y="3" width="16" height="24" rx="8" />
+          <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+          <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+        </svg>
+        <div class="font-mono-meta text-[8.5px] tracking-[0.2em] uppercase text-[#6B2421]">
+          PEBBLE PRESS · FIRST EDITION
+        </div>
+        <p class="font-book-serif italic text-[13px] text-[#463632] leading-snug">
+          {volume.subtitle}
+        </p>
+      </div>
+    ) : (
+      <div class="relative z-10 space-y-3.5 max-w-[220px]">
+        <svg class="w-7 h-9 mx-auto opacity-85" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="4" y="3" width="16" height="24" rx="8" />
+          <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+          <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+        </svg>
+        <div class="font-mono-meta text-[8.5px] tracking-[0.2em] uppercase opacity-70">
+          PEBBLE PRESS · {volume.edition}
+        </div>
+        <p class="font-book-serif italic text-[13.5px] leading-snug opacity-85">
+          {volume.subtitle}
+        </p>
+      </div>
+    )}
+  </div>
+
+  <!-- ======================================================================
+       3. DRY VELVETY MATTE SPINE — RAZOR-SHARP NATIVE HTML TYPOGRAPHY
+       ====================================================================== -->
+  <div
+    class="book3d-face book3d-spine"
+    style={`background-color: ${volume.spineBg}; color: ${volume.spineText};`}
+  >
+    {volume.designKey === 'mysql' && (
+      <>
+        <img
+          src="/covers/mysql-cloth.jpg"
+          alt=""
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 w-full h-full object-cover object-left"
+        />
+        <span class="relative z-10 font-mono-meta text-[8px] tracking-[0.24em] uppercase opacity-75">
+          PEBBLE
+        </span>
+        <span
+          class:list={[
+            'relative z-10 font-editorial font-semibold tracking-[0.06em] whitespace-nowrap',
+            isHero ? 'text-[24px]' : 'text-[20px]',
+          ]}
+          style="writing-mode: vertical-rl; text-orientation: mixed;"
+        >
+          MySQL
+        </span>
+        <svg class="relative z-10 w-[21px] h-[27px] opacity-90" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.65">
+          <rect x="4" y="3" width="16" height="24" rx="8" />
+          <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+          <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+        </svg>
+      </>
+    )}
+
+    {volume.designKey === 'redis' && (
+      <>
+        <img
+          src="/covers/redis-ebru.jpg"
+          alt=""
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 w-full h-full object-cover object-left"
+        />
+        <span class="relative z-10 h-3"></span>
+        <div class="relative z-10 bg-[#F5EFE2] text-[#1D1412] px-2.5 py-6 border-y-2 border-[#6B2421] shadow-[0_2px_6px_rgba(0,0,0,0.3)] flex items-center justify-center">
+          <span
+            class:list={[
+              'font-editorial font-bold tracking-[0.08em] whitespace-nowrap',
+              isHero ? 'text-[22px]' : 'text-[18px]',
+            ]}
+            style="writing-mode: vertical-rl; text-orientation: mixed;"
+          >
+            Redis
+          </span>
+        </div>
+        <div class="relative z-10 w-7 h-8 rounded-[2px] bg-[#F5EFE2]/95 text-[#6B2421] flex items-center justify-center shadow-[0_1px_4px_rgba(0,0,0,0.28)]">
+          <svg class="w-[17px] h-[21px]" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="4" y="3" width="16" height="24" rx="8" />
+            <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+            <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+          </svg>
+        </div>
+      </>
+    )}
+
+    {volume.designKey === 'juc' && (
+      <>
+        <div class="pointer-events-none absolute top-0 left-0 right-0 h-[78px] bg-[#1D4491] z-0"></div>
+        <span class="relative z-10 font-mono-meta text-[9px] font-semibold tracking-[0.2em] uppercase text-[#ECEAE1]">
+          03
+        </span>
+        <span
+          class:list={[
+            'relative z-10 font-extrabold tracking-[0.06em] whitespace-nowrap text-[#141619]',
+            isHero ? 'text-[23px]' : 'text-[19px]',
+          ]}
+          style="writing-mode: vertical-rl; text-orientation: mixed;"
+        >
+          JUC
+        </span>
+        <svg class="relative z-10 w-[20px] h-[25px] text-[#141619]" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.9">
+          <rect x="4" y="3" width="16" height="24" rx="8" />
+          <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+          <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+        </svg>
+      </>
+    )}
+
+    {volume.designKey === 'spring' && (
+      <>
+        <img
+          src="/covers/spring-dawn.jpg"
+          alt=""
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 w-full h-full object-cover object-left"
+        />
+        <span class="relative z-10 font-mono-meta text-[8px] tracking-[0.24em] uppercase text-[#2F3D36]/75">
+          PEBBLE
+        </span>
+        <span
+          class:list={[
+            'relative z-10 font-editorial font-semibold tracking-[0.08em] whitespace-nowrap text-[#1A221E]',
+            isHero ? 'text-[24px]' : 'text-[20px]',
+          ]}
+          style="writing-mode: vertical-rl; text-orientation: mixed;"
+        >
+          Spring
+        </span>
+        <svg class="relative z-10 w-[21px] h-[27px] text-[#1C2420]/85" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.65">
+          <rect x="4" y="3" width="16" height="24" rx="8" />
+          <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+          <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+        </svg>
+      </>
+    )}
+  </div>
+
+  <!-- 4. FORE-EDGE RECESSED IVORY PAPER BLOCK -->
+  <div class="book3d-face book3d-pages-right"></div>
+
+  <!-- 5. TOP & BOTTOM PAPER BLOCKS -->
+  <div class="book3d-face book3d-pages-top"></div>
+  <div class="book3d-face book3d-pages-bottom"></div>
+</div>

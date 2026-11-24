@@ -1,0 +1,657 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Book3D from '../components/Book3D.astro';
+import { getCollection } from 'astro:content';
+import { VOLUMES } from '../data/volumes';
+
+const allNotes = await getCollection('notes');
+const countByVolume: Record<string, number> = {};
+for (const note of allNotes) {
+  countByVolume[note.data.volume] = (countByVolume[note.data.volume] || 0) + 1;
+}
+
+const initialVol = VOLUMES[0];
+
+const volumePayloads = VOLUMES.map((v) => ({
+  id: v.id,
+  number: v.number,
+  title: v.title,
+  subtitle: v.subtitle,
+  coverBg: v.coverBg,
+  spineBg: v.spineBg,
+  stageBg: v.stageBg,
+  stageAccent: v.stageAccent,
+  count: countByVolume[v.id] || 0,
+}));
+---
+
+<BaseLayout
+  title="Pebble Press · 拾石集"
+  theme="gallery"
+  initialStageBg={initialVol.stageBg}
+  initialStageAccent={initialVol.stageAccent}
+>
+  <!-- Full-Viewport Stripe Press Exhibition Bookshelf (Razor-Sharp Native HTML Fonts + Cursor Floor Shadows) -->
+  <section
+    id="volumes"
+    class="relative w-full min-h-[calc(100vh-50px)] flex flex-col justify-between overflow-hidden transition-colors duration-500"
+    style={`background-color: ${initialVol.stageBg}; color: ${initialVol.stageAccent};`}
+  >
+    <!-- Subtle Matte Gallery Ambient Light -->
+    <div
+      class="pointer-events-none absolute inset-0"
+      style="background: radial-gradient(ellipse 64% 52% at 34% 18%, rgba(255, 250, 236, 0.055) 0%, transparent 66%), linear-gradient(180deg, transparent 0%, transparent 72%, rgba(0, 0, 0, 0.24) 100%);"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Top Subheader & Horizontal Editorial Title Strip -->
+    <div class="relative z-20 w-full max-w-[1440px] mx-auto px-5 sm:px-8 pt-4">
+      <div class="flex items-center justify-between text-[11px] font-mono-meta tracking-[0.16em] uppercase opacity-75">
+        <span>[ FULL CATALOGUE ]</span>
+        <div class="flex items-center gap-3">
+          <span id="shelf-counter">01 / {String(VOLUMES.length).padStart(2, '0')}</span>
+          <div class="flex items-center gap-1.5">
+            <button
+              id="shelf-prev"
+              type="button"
+              aria-label="上一册"
+              class="w-7 h-7 flex items-center justify-center rounded border border-current/25 hover:border-current/60 hover:bg-white/5 transition cursor-pointer"
+            >
+              ←
+            </button>
+            <button
+              id="shelf-next"
+              type="button"
+              aria-label="下一册"
+              class="w-7 h-7 flex items-center justify-center rounded border border-current/25 hover:border-current/60 hover:bg-white/5 transition cursor-pointer"
+            >
+              →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stripe Press Horizontal Serif Title Strip -->
+      <div class="mt-2.5 sm:mt-3 flex items-baseline justify-center gap-7 sm:gap-12 overflow-x-auto no-scrollbar py-1">
+        {VOLUMES.map((vol, idx) => (
+          <button
+            type="button"
+            data-title-index={idx}
+            class:list={[
+              'title-strip-btn font-editorial whitespace-nowrap transition-opacity duration-300 cursor-pointer tracking-[-0.01em]',
+              idx === 0
+                ? 'text-[2.1rem] sm:text-[2.85rem] opacity-100 font-semibold leading-none'
+                : 'text-2xl sm:text-[2.15rem] opacity-35 hover:opacity-70 italic leading-none',
+            ]}
+          >
+            {vol.title}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <!-- Full-Width Zero-Reflow GPU HTML 3D Bookshelf + Cursor-Reactive Floor Shadow Canvas -->
+    <div
+      id="bookshelf-stage"
+      class="relative z-10 w-full flex-1 flex items-center justify-center px-4 py-4"
+    >
+      <div id="gpu-shelf-track" class="gpu-shelf-track">
+        <!-- Dedicated 2D Point-Light Floor Cast-Shadow Canvas -->
+        <canvas
+          id="floor-shadow-canvas"
+          class="pointer-events-none absolute left-0 right-0 w-full"
+          style="z-index: 2;"
+        ></canvas>
+
+        <!-- GPU-Positioned Native HTML 3D Books -->
+        {VOLUMES.map((vol, idx) => (
+          <div
+            class="gpu-book-carrier"
+            data-book-carrier
+            data-index={idx}
+            style={`z-index: ${idx === 0 ? 20 : 10};`}
+          >
+            <Book3D volume={vol} size="hero" idPrefix="shelf-book" />
+          </div>
+        ))}
+
+        <!-- Exact Non-Overlapping Live-Tracked GPU Hitboxes -->
+        {VOLUMES.map((vol, idx) => (
+          <div
+            class="gpu-book-hitbox"
+            data-book-hitbox
+            data-index={idx}
+            data-volume-id={vol.id}
+            data-active={idx === 0 ? 'true' : 'false'}
+            aria-label={vol.title}
+            role="button"
+            tabindex="0"
+          ></div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Razor-Clean Stripe Press Bottom Action Strip -->
+    <div
+      class="relative z-20 w-full border-t transition-colors duration-500"
+      style="border-top-color: color-mix(in srgb, currentColor 18%, transparent);"
+    >
+      <div class="max-w-[1440px] mx-auto px-5 sm:px-8 h-12 flex items-center justify-between gap-4 font-mono-meta text-[11px] tracking-[0.14em] uppercase">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="opacity-70">[▶]</span>
+          <span id="bottom-active-label" class="truncate">
+            {initialVol.title} — {initialVol.subtitle}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-5 shrink-0">
+          <button
+            id="flip-active-book"
+            type="button"
+            class="opacity-80 hover:opacity-100 transition cursor-pointer"
+          >
+            FLIP [↻]
+          </button>
+          <span class="opacity-25">|</span>
+          <a
+            id="open-active-book"
+            href={`/volumes/${initialVol.id}`}
+            class="font-semibold hover:underline underline-offset-4 transition"
+          >
+            OPEN BOOK [+]
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiet Editorial Introduction to Pebble Press -->
+  <section id="about" class="bg-[#f9f7f1] text-[#131720]">
+    <div class="max-w-[1160px] mx-auto px-5 sm:px-8 py-24 sm:py-28">
+      <div class="font-mono-meta text-[11px] uppercase tracking-[0.16em] text-[#6c7380] pb-6 border-b border-[#e2ded3]">
+        [ ABOUT PEBBLE PRESS ]
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-14 items-start">
+        <div class="md:col-span-5">
+          <h2 class="font-editorial text-4xl sm:text-[3rem] font-semibold tracking-[-0.02em] leading-[1.12] text-[#131720]">
+            Pebble Press is for technical interviews.
+          </h2>
+        </div>
+
+        <div class="md:col-span-7 space-y-6 text-[15.5px] leading-[1.9] text-[#434a56]">
+          <p class="max-w-xl">
+            拾石集是一座面向技术面试的私人知识书架，收录 MySQL、Redis、JUC 与 Spring 的底层原理与高频考点。按册归档，静心翻阅。
+          </p>
+
+          <div class="pt-6 border-t border-[#e2ded3] grid grid-cols-3 gap-6 font-mono-meta text-xs max-w-xl">
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.14em] text-[#6c7380]">VOLUMES</div>
+              <div class="mt-1 text-base font-semibold text-[#131720]">{String(VOLUMES.length).padStart(2, '0')} 册</div>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.14em] text-[#6c7380]">ESSAYS</div>
+              <div class="mt-1 text-base font-semibold text-[#131720]">{String(allNotes.length).padStart(2, '0')} 篇</div>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.14em] text-[#6c7380]">SEARCH</div>
+              <button
+                type="button"
+                data-open-search
+                class="mt-1 text-sm font-medium text-[#1c3454] hover:underline underline-offset-4 cursor-pointer"
+              >
+                全文检索 →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script define:vars={{ volumePayloads }}>
+  const section = document.getElementById('volumes');
+  const header = document.getElementById('site-header');
+  const track = document.getElementById('gpu-shelf-track');
+  const shadowCanvas = document.getElementById('floor-shadow-canvas');
+  const shadowCtx = shadowCanvas?.getContext('2d', { alpha: true });
+
+  const carriers = Array.from(document.querySelectorAll('[data-book-carrier]'));
+  const hitboxes = Array.from(document.querySelectorAll('[data-book-hitbox]'));
+  const titleBtns = Array.from(document.querySelectorAll('[data-title-index]'));
+  const bookEls = carriers.map((c) => c.querySelector('[data-book3d]'));
+  const glareEls = carriers.map((c) => c.querySelector('[data-glare]'));
+  const count = carriers.length;
+
+  function createSoftShadowSprite(blurPx, topAlpha, midAlpha) {
+    const c = document.createElement('canvas');
+    c.width = 160;
+    c.height = 160;
+    const ctx = c.getContext('2d');
+    if (!ctx) return c;
+    ctx.filter = `blur(${blurPx}px)`;
+    const grad = ctx.createLinearGradient(0, 14, 0, 146);
+    grad.addColorStop(0, `rgba(0, 0, 0, ${topAlpha})`);
+    grad.addColorStop(0.58, `rgba(0, 0, 0, ${midAlpha})`);
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(24, 14, 112, 126);
+    return c;
+  }
+
+  function createContactSprite() {
+    const c = document.createElement('canvas');
+    c.width = 140;
+    c.height = 36;
+    const ctx = c.getContext('2d');
+    if (!ctx) return c;
+    ctx.filter = 'blur(4px)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
+    ctx.fillRect(14, 10, 112, 12);
+    return c;
+  }
+
+  const castSprite = createSoftShadowSprite(11, 0.72, 0.42);
+  const contactSprite = createContactSprite();
+
+  let trackW = 1400;
+  let trackH = 560;
+  let bookW = 366;
+  let bookH = 540;
+  let bookD = 71;
+  const SHADOW_CANVAS_H = 210;
+
+  let activeIdx = 0;
+  let flippedBack = false;
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragStartRotY = 0;
+  let dragStartRotX = 0;
+  let rafId = null;
+
+  let lightX = -0.32;
+  let lightY = 0.12;
+  let targetLightX = -0.32;
+  let targetLightY = 0.12;
+
+  // Keep active resting angle clean and low-perspective-distortion so HTML text renders razor-sharp!
+  const REST_ACTIVE_RY = -10;
+  const REST_ACTIVE_RX = 1.5;
+
+  const states = carriers.map((_, idx) => ({
+    x: 0,
+    targetX: 0,
+    hoverY: 0,
+    targetHoverY: 0,
+    ry: idx === 0 ? REST_ACTIVE_RY : 90,
+    targetRy: idx === 0 ? REST_ACTIVE_RY : 90,
+    rx: idx === 0 ? REST_ACTIVE_RX : 0,
+    targetRx: idx === 0 ? REST_ACTIVE_RX : 0,
+    tz: idx === 0 ? 24 : 0,
+    targetTz: idx === 0 ? 24 : 0,
+    hoverRy: 0,
+    hoverRx: 0,
+  }));
+
+  function computeLayoutTargets(snapImmediately = false) {
+    const spineGap = 16;
+    const activeFlankGap = 32;
+    const widths = states.map((_, i) => (i === activeIdx ? bookW : bookD));
+
+    let totalW = 0;
+    for (let i = 0; i < count; i++) {
+      totalW += widths[i];
+      if (i < count - 1) {
+        totalW += i === activeIdx || i + 1 === activeIdx ? activeFlankGap : spineGap;
+      }
+    }
+
+    let cursor = -totalW / 2;
+    for (let i = 0; i < count; i++) {
+      const center = cursor + widths[i] / 2;
+      states[i].targetX = center;
+      if (snapImmediately) states[i].x = center;
+
+      const hb = hitboxes[i];
+      if (hb) {
+        const hitW = i === activeIdx ? bookW + 12 : bookD + 4;
+        hb.style.width = `${Math.round(hitW)}px`;
+        hb.dataset.hitW = String(Math.round(hitW));
+        hb.setAttribute('data-active', i === activeIdx ? 'true' : 'false');
+        if (snapImmediately) {
+          hb.style.transform = `translate3d(${Math.round(center - hitW / 2)}px, -50%, 0)`;
+        }
+      }
+
+      cursor += widths[i] + (i === activeIdx || i + 1 === activeIdx ? activeFlankGap : spineGap);
+    }
+  }
+
+  function measureMetrics(snap = false) {
+    if (!track || !bookEls[0]) return;
+    const tRect = track.getBoundingClientRect();
+    trackW = Math.max(320, Math.round(tRect.width));
+    trackH = Math.max(360, Math.round(tRect.height));
+
+    const bStyle = getComputedStyle(bookEls[0]);
+    bookH = parseFloat(bStyle.height) || 520;
+    bookW = parseFloat(bStyle.width) || bookH * 0.678;
+    bookD = bookH * 0.132;
+
+    if (shadowCanvas) {
+      shadowCanvas.width = trackW;
+      shadowCanvas.height = SHADOW_CANVAS_H;
+      const baselineTop = Math.round((trackH + bookH) / 2) - 8;
+      shadowCanvas.style.top = `${baselineTop}px`;
+      shadowCanvas.style.height = `${SHADOW_CANVAS_H}px`;
+    }
+
+    computeLayoutTargets(snap);
+    wake();
+  }
+
+  function syncChrome() {
+    const vol = volumePayloads[activeIdx];
+    if (!vol) return;
+
+    if (section) {
+      section.style.backgroundColor = vol.stageBg;
+      section.style.color = vol.stageAccent;
+    }
+    if (header && header.getAttribute('data-header-theme') === 'gallery') {
+      header.style.backgroundColor = vol.stageBg;
+      header.style.borderBottomColor = `color-mix(in srgb, ${vol.stageAccent} 22%, transparent)`;
+      header.style.color = vol.stageAccent;
+    }
+
+    const counterEl = document.getElementById('shelf-counter');
+    const bottomLabel = document.getElementById('bottom-active-label');
+    const openLink = document.getElementById('open-active-book');
+    const flipBtn = document.getElementById('flip-active-book');
+
+    if (counterEl) counterEl.textContent = `${String(activeIdx + 1).padStart(2, '0')} / ${String(count).padStart(2, '0')}`;
+    if (bottomLabel) bottomLabel.textContent = `${vol.title} — ${vol.subtitle}`;
+    if (openLink) openLink.setAttribute('href', `/volumes/${vol.id}`);
+    if (flipBtn) flipBtn.textContent = flippedBack ? 'FRONT [↺]' : 'FLIP [↻]';
+
+    titleBtns.forEach((btn, i) => {
+      const isAct = i === activeIdx;
+      btn.className = isAct
+        ? 'title-strip-btn font-editorial whitespace-nowrap transition-opacity duration-300 cursor-pointer tracking-[-0.01em] text-[2.1rem] sm:text-[2.85rem] opacity-100 font-semibold leading-none'
+        : 'title-strip-btn font-editorial whitespace-nowrap transition-opacity duration-300 cursor-pointer tracking-[-0.01em] text-2xl sm:text-[2.15rem] opacity-35 hover:opacity-70 italic leading-none';
+    });
+  }
+
+  function selectBook(nextIdx) {
+    activeIdx = ((nextIdx % count) + count) % count;
+    flippedBack = false;
+
+    carriers.forEach((carrier, i) => {
+      const isAct = i === activeIdx;
+      carrier.style.zIndex = isAct ? '20' : '10';
+      states[i].targetHoverY = 0;
+      states[i].hoverRy = 0;
+      states[i].hoverRx = 0;
+      if (isAct) {
+        states[i].targetRy = REST_ACTIVE_RY;
+        states[i].targetRx = REST_ACTIVE_RX;
+        states[i].targetTz = 24;
+      } else {
+        states[i].targetRy = 90;
+        states[i].targetRx = 0;
+        states[i].targetTz = 0;
+      }
+      if (glareEls[i] && !isAct) glareEls[i].style.opacity = '0';
+    });
+
+    computeLayoutTargets(false);
+    syncChrome();
+    wake();
+  }
+
+  function renderFloorShadows() {
+    if (!shadowCtx || !shadowCanvas) return;
+    shadowCtx.clearRect(0, 0, trackW, SHADOW_CANVAS_H);
+
+    const centerX = trackW / 2;
+    const lampX = centerX + lightX * Math.min(trackW * 0.56, 760);
+    const shadowLen = Math.max(96, Math.min(198, 142 + lightY * 48));
+
+    for (let i = 0; i < count; i++) {
+      const s = states[i];
+      const isAct = i === activeIdx;
+      const rad = (s.ry * Math.PI) / 180;
+      const projW = Math.abs(Math.cos(rad)) * bookW + Math.abs(Math.sin(rad)) * bookD;
+      const screenX = centerX + s.x;
+
+      const dx = screenX - lampX;
+      const skew = Math.max(-1.05, Math.min(1.05, dx / 440));
+      const liftFade = Math.max(0.6, 1 + s.hoverY / 40);
+
+      shadowCtx.save();
+      shadowCtx.setTransform(1, 0, skew, 1, screenX, 4);
+      shadowCtx.globalAlpha = (isAct ? 0.68 : 0.54) * liftFade;
+      shadowCtx.drawImage(
+        castSprite,
+        -projW * 0.62,
+        -12,
+        projW * 1.24,
+        shadowLen * (isAct ? 1.06 : 0.94)
+      );
+      shadowCtx.restore();
+
+      const vol = volumePayloads[i];
+      shadowCtx.save();
+      const reflGrad = shadowCtx.createLinearGradient(0, 4, 0, 56);
+      reflGrad.addColorStop(0, vol.coverBg);
+      reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      shadowCtx.globalAlpha = (isAct ? 0.13 : 0.08) * liftFade;
+      shadowCtx.fillStyle = reflGrad;
+      shadowCtx.fillRect(screenX - projW * 0.48, 4, projW * 0.96, 52);
+      shadowCtx.restore();
+
+      shadowCtx.save();
+      shadowCtx.globalAlpha = (isAct ? 0.72 : 0.6) * liftFade;
+      shadowCtx.drawImage(contactSprite, screenX - projW * 0.56, -4, projW * 1.12, 18);
+      shadowCtx.restore();
+    }
+  }
+
+  function tick() {
+    let moving = false;
+
+    const dlx = targetLightX - lightX;
+    const dly = targetLightY - lightY;
+    if (Math.abs(dlx) > 0.0015 || Math.abs(dly) > 0.0015) {
+      lightX += dlx * 0.14;
+      lightY += dly * 0.14;
+      moving = true;
+    } else {
+      lightX = targetLightX;
+      lightY = targetLightY;
+    }
+
+    for (let i = 0; i < count; i++) {
+      const s = states[i];
+      const isAct = i === activeIdx;
+      const goalRy = s.targetRy + (isAct && !isDragging ? s.hoverRy : 0);
+      const goalRx = s.targetRx + (isAct && !isDragging ? s.hoverRx : 0);
+      const ease = isDragging && isAct ? 0.28 : 0.13;
+
+      const dx = s.targetX - s.x;
+      const dhy = s.targetHoverY - s.hoverY;
+      const dry = goalRy - s.ry;
+      const drx = goalRx - s.rx;
+      const dtz = s.targetTz - s.tz;
+
+      if (
+        Math.abs(dx) > 0.08 ||
+        Math.abs(dhy) > 0.06 ||
+        Math.abs(dry) > 0.04 ||
+        Math.abs(drx) > 0.04 ||
+        Math.abs(dtz) > 0.08
+      ) {
+        s.x += dx * 0.14;
+        s.hoverY += dhy * 0.18;
+        s.ry += dry * ease;
+        s.rx += drx * ease;
+        s.tz += dtz * 0.14;
+        moving = true;
+      } else {
+        s.x = s.targetX;
+        s.hoverY = s.targetHoverY;
+        s.ry = goalRy;
+        s.rx = goalRx;
+        s.tz = s.targetTz;
+      }
+
+      const carrier = carriers[i];
+      if (carrier) {
+        const px = moving ? (s.x - bookW / 2).toFixed(2) : Math.round(s.x - bookW / 2);
+        const py = moving ? s.hoverY.toFixed(2) : Math.round(s.hoverY);
+        carrier.style.transform = `translate3d(${px}px, calc(-50% + ${py}px), 0)`;
+      }
+
+      const hb = hitboxes[i];
+      if (hb) {
+        const hitW = Number(hb.dataset.hitW || bookD);
+        hb.style.transform = `translate3d(${(s.x - hitW / 2).toFixed(1)}px, -50%, 0)`;
+      }
+
+      const el = bookEls[i];
+      if (el) {
+        el.style.transform = `translate3d(0, 0, ${s.tz.toFixed(1)}px) rotateX(${s.rx.toFixed(2)}deg) rotateY(${s.ry.toFixed(2)}deg)`;
+      }
+    }
+
+    renderFloorShadows();
+
+    if (moving || isDragging) {
+      rafId = requestAnimationFrame(tick);
+    } else {
+      rafId = null;
+    }
+  }
+
+  function wake() {
+    if (rafId === null) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  section?.addEventListener('pointermove', (e) => {
+    const rect = section.getBoundingClientRect();
+    targetLightX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    targetLightY = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+
+    if (!isDragging) {
+      const glare = glareEls[activeIdx];
+      if (glare) {
+        glare.style.setProperty('--glare-x', `${Math.round(((targetLightX + 1) / 2) * 100)}%`);
+        glare.style.setProperty('--glare-y', `${Math.round(((targetLightY + 1) / 2) * 100)}%`);
+        glare.style.opacity = '1';
+      }
+    }
+    wake();
+  });
+
+  section?.addEventListener('pointerleave', () => {
+    targetLightX = -0.32;
+    targetLightY = 0.12;
+    if (glareEls[activeIdx]) glareEls[activeIdx].style.opacity = '0';
+    wake();
+  });
+
+  hitboxes.forEach((hb, idx) => {
+    hb.addEventListener('pointerenter', () => {
+      if (idx !== activeIdx) {
+        states[idx].targetHoverY = -12;
+        wake();
+      }
+    });
+
+    hb.addEventListener('pointerleave', () => {
+      states[idx].targetHoverY = 0;
+      if (idx === activeIdx && !isDragging) {
+        states[idx].hoverRy = 0;
+        states[idx].hoverRx = 0;
+      }
+      wake();
+    });
+
+    hb.addEventListener('pointerdown', (e) => {
+      if (idx !== activeIdx) {
+        selectBook(idx);
+        return;
+      }
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragStartRotY = states[idx].targetRy;
+      dragStartRotX = states[idx].targetRx;
+      hb.setPointerCapture?.(e.pointerId);
+      wake();
+    });
+
+    hb.addEventListener('pointermove', (e) => {
+      if (idx !== activeIdx) return;
+
+      if (isDragging) {
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        states[idx].targetRy = dragStartRotY + dx * 0.6;
+        states[idx].targetRx = Math.max(-24, Math.min(24, dragStartRotX - dy * 0.3));
+        wake();
+        return;
+      }
+
+      const rect = hb.getBoundingClientRect();
+      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+      states[idx].hoverRy = nx * 9;
+      states[idx].hoverRx = -ny * 6;
+      wake();
+    });
+
+    hb.addEventListener('pointerup', (e) => {
+      if (idx !== activeIdx || !isDragging) return;
+      isDragging = false;
+      hb.releasePointerCapture?.(e.pointerId);
+      const norm = (((states[idx].targetRy % 360) + 360) % 360);
+      flippedBack = norm > 95 && norm < 265;
+      syncChrome();
+      wake();
+    });
+
+    hb.addEventListener('dblclick', () => {
+      if (idx !== activeIdx) return;
+      window.location.href = `/volumes/${volumePayloads[idx].id}`;
+    });
+  });
+
+  titleBtns.forEach((btn, idx) => btn.addEventListener('click', () => selectBook(idx)));
+  document.getElementById('shelf-prev')?.addEventListener('click', () => selectBook(activeIdx - 1));
+  document.getElementById('shelf-next')?.addEventListener('click', () => selectBook(activeIdx + 1));
+
+  document.getElementById('flip-active-book')?.addEventListener('click', () => {
+    flippedBack = !flippedBack;
+    states[activeIdx].targetRy = flippedBack ? 170 : REST_ACTIVE_RY;
+    states[activeIdx].targetRx = REST_ACTIVE_RX;
+    syncChrome();
+    wake();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const searchOpen = !document.getElementById('search-modal')?.classList.contains('hidden');
+    if (searchOpen) return;
+    if (e.key === 'ArrowLeft') selectBook(activeIdx - 1);
+    if (e.key === 'ArrowRight') selectBook(activeIdx + 1);
+  });
+
+  window.addEventListener('resize', () => measureMetrics(true));
+
+  syncChrome();
+  measureMetrics(true);
+</script>

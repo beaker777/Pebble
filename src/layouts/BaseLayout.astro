@@ -1,0 +1,189 @@
+---
+import '@fontsource/cormorant-garamond/400.css';
+import '@fontsource/cormorant-garamond/600.css';
+import '@fontsource/cormorant-garamond/700.css';
+import '@fontsource/cormorant-garamond/400-italic.css';
+import '@fontsource/cormorant-garamond/600-italic.css';
+import '@fontsource/eb-garamond/400.css';
+import '@fontsource/eb-garamond/400-italic.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/inter/800.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+
+import '../styles/global.css';
+import SearchModal from '../components/SearchModal.astro';
+import { getCollection } from 'astro:content';
+import { VOLUMES } from '../data/volumes';
+
+interface Props {
+  title: string;
+  description?: string;
+  theme?: 'paper' | 'gallery';
+  initialStageBg?: string;
+  initialStageAccent?: string;
+}
+
+const {
+  title,
+  description = 'Pebble Press · 拾石集',
+  theme = 'paper',
+  initialStageBg = '#1D2018',
+  initialStageAccent = '#E2C675',
+} = Astro.props;
+
+const allNotes = await getCollection('notes');
+const totalCount = allNotes.length;
+const isGallery = theme === 'gallery';
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="flex flex-col min-h-screen">
+    <!-- Zero-blur lightweight Masthead -->
+    <header
+      id="site-header"
+      data-header-theme={theme}
+      class:list={[
+        'sticky top-0 z-40 border-b transition-colors duration-500',
+        !isGallery && 'bg-[#fafaf7] border-[#e4e1d8]',
+      ]}
+      style={
+        isGallery
+          ? `background-color: ${initialStageBg}; border-bottom-color: color-mix(in srgb, ${initialStageAccent} 22%, transparent); color: ${initialStageAccent};`
+          : undefined
+      }
+    >
+      <div class="max-w-[1440px] mx-auto px-5 sm:px-8 h-[50px] flex items-center justify-between gap-4">
+        <a href="/" class="flex items-center gap-2.5 group">
+          <svg
+            class="w-[18px] h-[22px] shrink-0 transition-transform group-hover:scale-[1.06]"
+            viewBox="0 0 24 30"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+          >
+            <rect x="4" y="3" width="16" height="24" rx="8" />
+            <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
+            <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
+          </svg>
+          <span
+            class:list={[
+              'font-mono-meta text-xs font-medium tracking-[0.18em] uppercase',
+              !isGallery && 'text-[#131720]',
+            ]}
+          >
+            PEBBLE PRESS
+          </span>
+        </a>
+
+        <nav
+          class:list={[
+            'hidden md:flex items-center gap-8 font-mono-meta text-[11px] tracking-[0.14em] uppercase',
+            isGallery ? 'opacity-80' : 'text-[#434a56]',
+          ]}
+        >
+          <a href="/#volumes" class="hover:opacity-100 transition">Volumes</a>
+          <a href="/#about" class="hover:opacity-100 transition">About</a>
+        </nav>
+
+        <div class="flex items-center gap-3.5">
+          <div
+            class:list={[
+              'hidden sm:flex items-center gap-1.5 font-mono-meta text-[11px]',
+              isGallery ? 'opacity-80' : 'text-[#434a56]',
+            ]}
+            title="已掌握进度"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full"
+              style={isGallery ? 'background-color: currentColor;' : 'background-color: #244237;'}
+            ></span>
+            <span><strong id="header-mastered-count">0</strong>/{totalCount}</span>
+          </div>
+
+          <button
+            type="button"
+            data-open-search
+            class:list={[
+              'flex items-center gap-2 px-2.5 py-1 text-xs rounded transition cursor-pointer border',
+              isGallery
+                ? 'border-current/25 hover:border-current/55 hover:bg-white/5'
+                : 'text-[#434a56] bg-[#ffffff] hover:bg-[#f3f1eb] border-[#dcd8cc]',
+            ]}
+          >
+            <svg class="w-3.5 h-3.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M20 20l-3.5-3.5"></path>
+            </svg>
+            <kbd class="font-mono-meta text-[10px] opacity-80">⌘K</kbd>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <!-- Quiet Minimal Footer -->
+    <footer class="border-t border-[#e4e1d8] bg-[#fafaf7]">
+      <div class="max-w-[1440px] mx-auto px-5 sm:px-8 py-6 flex items-center justify-between text-[11px] font-mono-meta text-[#6c7380]">
+        <span>PEBBLE PRESS · 拾石集</span>
+        <span>{String(VOLUMES.length).padStart(2, '0')} VOLUMES · {String(totalCount).padStart(2, '0')} ESSAYS</span>
+      </div>
+    </footer>
+
+    <SearchModal />
+
+    <script is:inline>
+      (function () {
+        const KEY = 'pebble-press-mastered-v1';
+        window.PebbleMastery = {
+          getAll() {
+            try {
+              const raw = localStorage.getItem(KEY);
+              const parsed = raw ? JSON.parse(raw) : [];
+              return Array.isArray(parsed) ? parsed : [];
+            } catch {
+              return [];
+            }
+          },
+          has(slug) {
+            return this.getAll().includes(slug);
+          },
+          toggle(slug) {
+            const set = new Set(this.getAll());
+            if (set.has(slug)) {
+              set.delete(slug);
+            } else {
+              set.add(slug);
+            }
+            const next = Array.from(set);
+            localStorage.setItem(KEY, JSON.stringify(next));
+            window.dispatchEvent(new CustomEvent('pebble:mastery-changed', { detail: next }));
+            return set.has(slug);
+          },
+        };
+
+        function syncHeader() {
+          const el = document.getElementById('header-mastered-count');
+          if (el) el.textContent = String(window.PebbleMastery.getAll().length);
+        }
+
+        syncHeader();
+        window.addEventListener('pebble:mastery-changed', syncHeader);
+      })();
+    </script>
+  </body>
+</html>

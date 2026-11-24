@@ -1,0 +1,541 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #fafaf7;
+  --paper-pure: #ffffff;
+  --paper-warm: #f3f1eb;
+  --paper-tint: #ece9e0;
+  --ink: #131720;
+  --ink-secondary: #434a56;
+  --ink-muted: #6c7380;
+  --rule: #e4e1d8;
+  --rule-strong: #cfcbb9;
+  --accent-navy: #1c3454;
+}
+
+@layer base {
+  html {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: #e6dfd0;
+    color: var(--ink);
+  }
+}
+
+/* High-contrast Stripe Press Editorial Serif Stack */
+.font-editorial {
+  font-family: "Cormorant Garamond", "EB Garamond", "Iowan Old Style", Georgia, "Songti SC", "Noto Serif SC", serif;
+}
+
+.font-book-serif {
+  font-family: "EB Garamond", "Cormorant Garamond", Georgia, "Songti SC", serif;
+}
+
+.font-mono-meta {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================================================
+   Zero-Reflow GPU 3D Physical Hardcover Book System
+   ========================================================= */
+.book3d-stage {
+  perspective: 2200px;
+  perspective-origin: 50% 46%;
+}
+
+.book3d-object {
+  --book-h: clamp(360px, 60vh, 550px);
+  --book-w: calc(var(--book-h) * 0.678);
+  --book-d: calc(var(--book-h) * 0.132);
+  --half-d: calc(var(--book-d) / 2);
+  --board-overhang: 5px;
+  --page-inset: 4px;
+
+  position: relative;
+  width: var(--book-w);
+  min-width: var(--book-w);
+  height: var(--book-h);
+  flex-shrink: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.book3d-object[data-size="lg"] {
+  --book-h: clamp(340px, 48vh, 444px);
+  --book-w: calc(var(--book-h) * 0.678);
+  --book-d: calc(var(--book-h) * 0.128);
+}
+
+.book3d-face {
+  position: absolute;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 1. Front Cover — Dry Matte Uncoated Paper / Buckram Cloth (Zero Plastic Gloss) */
+.book3d-front {
+  inset: 0;
+  border-radius: 1.5px 4px 4px 1.5px;
+  transform: translateZ(var(--half-d));
+  overflow: hidden;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.2),
+    inset -1px 0 3px rgba(0, 0, 0, 0.16);
+}
+
+.book3d-front::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background:
+    /* Authentic dry-pressed matte hardcover joint groove (no shiny streak) */
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.34) 0%,
+      rgba(255, 255, 255, 0.05) 1.4%,
+      rgba(0, 0, 0, 0.24) 3.2%,
+      rgba(255, 255, 255, 0.05) 4.4%,
+      rgba(0, 0, 0, 0.04) 6.2%,
+      transparent 9.5%
+    ),
+    /* Very gentle matte paper ambient falloff */
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      transparent 42%,
+      rgba(0, 0, 0, 0.12) 100%
+    ),
+    /* Fine dry woven buckram micro-grain */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.11'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 100% 100%, 120px 120px;
+}
+
+/* Soft dry-paper diffuse illumination pool (subtle matte light, never glossy) */
+.book3d-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(
+    circle at var(--glare-x, 30%) var(--glare-y, 25%),
+    rgba(255, 250, 238, 0.1) 0%,
+    rgba(255, 250, 238, 0.025) 38%,
+    transparent 72%
+  );
+  mix-blend-mode: soft-light;
+}
+
+/* 2. Back Cover (Matte) */
+.book3d-back {
+  inset: 0;
+  border-radius: 4px 1.5px 1.5px 4px;
+  transform: rotateY(180deg) translateZ(var(--half-d));
+  overflow: hidden;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.book3d-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(
+      270deg,
+      rgba(0, 0, 0, 0.3) 0%,
+      rgba(255, 255, 255, 0.04) 1.6%,
+      rgba(0, 0, 0, 0.18) 3.4%,
+      transparent 8%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.11'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 120px 120px;
+}
+
+/* 3. Velvety Dry Matte Flat-Back Spine (Stripe Press Square Cloth Spine, ZERO Gloss) */
+.book3d-spine {
+  top: 0;
+  left: 0;
+  width: var(--book-d);
+  height: var(--book-h);
+  border-radius: 1.5px;
+  transform-origin: center center;
+  transform: translateX(calc(var(--book-d) / -2)) rotateY(-90deg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26px 0 22px;
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.06),
+    inset -1px 0 0 rgba(0, 0, 0, 0.22);
+}
+
+/* Pure dry matte flat-board edge shading + uncoated cloth grain (NO shiny cylinder band!) */
+.book3d-spine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.24) 0%,
+      rgba(255, 255, 255, 0.03) 5%,
+      transparent 13%,
+      transparent 86%,
+      rgba(0, 0, 0, 0.08) 94%,
+      rgba(0, 0, 0, 0.3) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      transparent 14%,
+      transparent 84%,
+      rgba(0, 0, 0, 0.16) 100%
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 100% 100%, 120px 120px;
+}
+
+/* 4. Fore-edge Recessed Ivory Paper Block */
+.book3d-pages-right {
+  top: var(--board-overhang);
+  right: 0;
+  width: calc(var(--book-d) - 4px);
+  height: calc(var(--book-h) - var(--board-overhang) * 2);
+  transform-origin: center center;
+  transform: translateX(calc((var(--book-d) - 4px) / 2 - var(--page-inset))) rotateY(90deg);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(10, 12, 16, 0.28) 0%,
+      rgba(255, 255, 255, 0.3) 16%,
+      rgba(10, 12, 16, 0.06) 56%,
+      rgba(10, 12, 16, 0.22) 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      #f3eee3 0px,
+      #f3eee3 1.5px,
+      #e1d9c8 1.5px,
+      #e1d9c8 3px
+    );
+  box-shadow:
+    inset 0 8px 14px rgba(0, 0, 0, 0.24),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.24);
+}
+
+/* 5. Top Paper Block */
+.book3d-pages-top {
+  top: 0;
+  left: 2px;
+  width: calc(var(--book-w) - var(--page-inset) - 2px);
+  height: calc(var(--book-d) - 4px);
+  transform-origin: center center;
+  transform: translateY(calc((var(--book-d) - 4px) / -2 + var(--board-overhang))) rotateX(90deg);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(10, 12, 16, 0.34) 0%,
+      rgba(10, 12, 16, 0.06) 12%,
+      rgba(255, 255, 255, 0.26) 46%,
+      rgba(10, 12, 16, 0.16) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      #f4efe4 0px,
+      #f4efe4 1.5px,
+      #e1d9c8 1.5px,
+      #e1d9c8 3px
+    );
+}
+
+/* 6. Bottom Paper Block */
+.book3d-pages-bottom {
+  bottom: 0;
+  left: 2px;
+  width: calc(var(--book-w) - var(--page-inset) - 2px);
+  height: calc(var(--book-d) - 4px);
+  transform-origin: center center;
+  transform: translateY(calc((var(--book-d) - 4px) / 2 - var(--board-overhang))) rotateX(-90deg);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(10, 12, 16, 0.4) 0%,
+      rgba(10, 12, 16, 0.14) 18%,
+      rgba(10, 12, 16, 0.22) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      #e5ded0 0px,
+      #e5ded0 1.5px,
+      #d3cab8 1.5px,
+      #d3cab8 3px
+    );
+}
+
+/* =========================================================
+   Zero-Reflow GPU Shelf Slot (Pure Transform Positioning)
+   ========================================================= */
+.gpu-shelf-track {
+  --track-h: clamp(360px, 60vh, 550px);
+  position: relative;
+  width: 100%;
+  height: calc(var(--track-h) + 28px);
+}
+
+.gpu-book-carrier {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  perspective: 2100px;
+  perspective-origin: 50% 46%;
+  will-change: transform;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Exact non-overlapping hit target per book (pure GPU translate3d) */
+.gpu-book-hitbox {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: calc(var(--track-h) + 8px);
+  will-change: transform;
+  cursor: pointer;
+  z-index: 30;
+}
+
+.gpu-book-hitbox[data-active="true"] {
+  cursor: grab;
+  z-index: 35;
+}
+
+.gpu-book-hitbox[data-active="true"]:active {
+  cursor: grabbing;
+}
+
+/* =========================================================
+   Fine-Press Editorial Reading Typography (Stripe Press / Monograph)
+   ========================================================= */
+.editorial-double-rule {
+  height: 5px;
+  border-top: 1.5px solid #181c24;
+  border-bottom: 1px solid #d5d0c3;
+}
+
+.prose-press {
+  color: #202630;
+  font-size: 1.045rem;
+  line-height: 1.92;
+  letter-spacing: 0.005em;
+}
+
+.prose-press > *:first-child {
+  margin-top: 0;
+}
+
+.prose-press h2 {
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, "Songti SC", "Noto Serif SC", serif;
+  font-size: 1.72rem;
+  font-weight: 700;
+  color: #12161f;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  margin-top: 3rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dfdace;
+  scroll-margin-top: 5.5rem;
+}
+
+.prose-press h3 {
+  font-family: "Inter", "PingFang SC", sans-serif;
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: #161b24;
+  letter-spacing: -0.01em;
+  margin-top: 2.1rem;
+  margin-bottom: 0.7rem;
+  scroll-margin-top: 5.5rem;
+}
+
+.prose-press p {
+  margin-top: 1.08rem;
+  margin-bottom: 1.08rem;
+}
+
+.prose-press strong {
+  color: #11151d;
+  font-weight: 600;
+}
+
+.prose-press ul,
+.prose-press ol {
+  margin-top: 0.95rem;
+  margin-bottom: 1.3rem;
+  padding-left: 1.45rem;
+}
+
+.prose-press ul {
+  list-style-type: disc;
+}
+
+.prose-press ol {
+  list-style-type: decimal;
+}
+
+.prose-press li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-press li::marker {
+  color: #8b877c;
+}
+
+/* Literary Callout / Interview Follow-Up Blockquote */
+.prose-press blockquote {
+  margin: 1.9rem 0;
+  padding: 1.15rem 1.5rem;
+  background-color: #f1ede3;
+  border-left: 2.5px solid var(--vol-accent, #1c3454);
+  color: #292f3b;
+  font-size: 0.975rem;
+  line-height: 1.85;
+}
+
+.prose-press blockquote p {
+  margin: 0.4rem 0;
+}
+
+.prose-press code:not(pre code) {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background-color: #eeeae0;
+  color: #7d2e22;
+  padding: 0.14rem 0.4rem;
+  border-radius: 3px;
+}
+
+/* Editorial Code Exhibit */
+.prose-press .code-block-wrap {
+  position: relative;
+  margin: 1.75rem 0;
+}
+
+.prose-press pre {
+  margin: 1.75rem 0;
+  padding: 1.35rem 1.55rem;
+  border-radius: 4px;
+  border: 1px solid #e0dbd0;
+  background-color: #f2efe7 !important;
+  overflow-x: auto;
+  font-size: 0.885rem;
+  line-height: 1.72;
+}
+
+.prose-press .code-block-wrap pre {
+  margin: 0;
+}
+
+.prose-press pre code {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: transparent;
+  padding: 0;
+  border: none;
+  color: inherit;
+}
+
+/* LaTeX booktabs-style Academic Tables (Zero heavy spreadsheet boxes!) */
+.prose-press table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.94rem;
+  line-height: 1.68;
+  border-top: 1.5px solid #181c24;
+  border-bottom: 1.5px solid #181c24;
+}
+
+.prose-press thead {
+  border-bottom: 1px solid #b5b0a2;
+}
+
+.prose-press th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+  color: #141820;
+  padding: 0.8rem 1rem 0.72rem 0.25rem;
+  background-color: transparent;
+}
+
+.prose-press td {
+  padding: 0.8rem 1rem 0.8rem 0.25rem;
+  border-bottom: 1px solid #e6e2d7;
+  vertical-align: top;
+}
+
+.prose-press tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.prose-press hr {
+  border: none;
+  border-top: 1px solid #dfdace;
+  margin: 2.5rem 0;
+}
+
+.prose-press a {
+  color: var(--accent-navy);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: #bfb9aa;
+}
+
+.prose-press a:hover {
+  text-decoration-color: var(--accent-navy);
+}

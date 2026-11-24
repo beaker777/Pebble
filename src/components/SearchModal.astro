@@ -1,0 +1,187 @@
+---
+---
+
+<div
+  id="search-modal"
+  class="fixed inset-0 z-50 hidden items-start justify-center bg-[#131720]/45 backdrop-blur-[2px] px-4 pt-[12vh]"
+  role="dialog"
+  aria-modal="true"
+  aria-label="检索"
+>
+  <div class="w-full max-w-xl bg-[#ffffff] border border-[#dad6ca] rounded-xl shadow-2xl overflow-hidden">
+    <div class="flex items-center gap-3 px-4 py-3.5 border-b border-[#e4e1d8]">
+      <svg class="w-4 h-4 text-[#6c7380] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="M20 20l-3.5-3.5"></path>
+      </svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="检索篇目、标签或关键词..."
+        class="w-full bg-transparent text-sm text-[#131720] placeholder-[#8b919d] focus:outline-none"
+        autocomplete="off"
+      />
+      <kbd class="font-mono-meta text-[10px] text-[#6c7380] bg-[#f3f1eb] border border-[#e4e1d8] px-1.5 py-0.5 rounded">
+        ESC
+      </kbd>
+    </div>
+
+    <div id="search-results" class="max-h-[55vh] overflow-y-auto divide-y divide-[#efede6]"></div>
+
+    <div class="flex items-center justify-end px-4 py-2 bg-[#fafaf7] border-t border-[#e4e1d8] text-[10px] font-mono-meta text-[#6c7380]">
+      <span>↑ ↓ · ↵ · ESC</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  interface SearchItem {
+    slug: string;
+    title: string;
+    summary: string;
+    volume: string;
+    volumeNumber: string;
+    volumeTitle: string;
+    volumeColor: string;
+    frequency: string;
+    tags: string[];
+  }
+
+  let cache: SearchItem[] | null = null;
+  let activeIndex = 0;
+  let currentMatches: SearchItem[] = [];
+
+  const modal = document.getElementById('search-modal');
+  const input = document.getElementById('search-input') as HTMLInputElement | null;
+  const resultsEl = document.getElementById('search-results');
+
+  async function loadIndex(): Promise<SearchItem[]> {
+    if (cache) return cache;
+    const res = await fetch('/search-index.json');
+    cache = await res.json();
+    return cache || [];
+  }
+
+  function escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function renderResults(items: SearchItem[], query: string) {
+    if (!resultsEl) return;
+    currentMatches = items;
+    activeIndex = 0;
+
+    if (items.length === 0) {
+      resultsEl.innerHTML = `<div class="px-4 py-10 text-center text-xs text-[#6c7380]">无匹配结果 “${escapeHtml(query)}”</div>`;
+      return;
+    }
+
+    resultsEl.innerHTML = items
+      .map(
+        (item, idx) => `
+        <a
+          href="/notes/${item.slug}"
+          data-search-idx="${idx}"
+          class="search-row block px-4 py-3 transition ${idx === 0 ? 'bg-[#f3f1eb]' : 'hover:bg-[#fafaf7]'}"
+        >
+          <div class="flex items-center justify-between gap-2 mb-0.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="inline-block w-2 h-2 rounded-full shrink-0" style="background:${item.volumeColor};"></span>
+              <span class="font-mono-meta text-[11px] text-[#6c7380] shrink-0">${escapeHtml(item.volumeNumber)} · ${escapeHtml(item.volumeTitle)}</span>
+            </div>
+            <span class="font-mono-meta text-[10px] px-1.5 py-0.5 rounded bg-[#f3f1eb] text-[#434a56] shrink-0">${escapeHtml(item.frequency)}</span>
+          </div>
+          <div class="text-sm font-semibold text-[#131720]">${escapeHtml(item.title)}</div>
+          <div class="text-xs text-[#6c7380] mt-0.5 line-clamp-1">${escapeHtml(item.summary)}</div>
+        </a>
+      `
+      )
+      .join('');
+  }
+
+  function updateHighlight() {
+    const rows = resultsEl?.querySelectorAll('.search-row');
+    if (!rows) return;
+    rows.forEach((row, idx) => {
+      if (idx === activeIndex) {
+        row.classList.add('bg-[#f3f1eb]');
+        row.scrollIntoView({ block: 'nearest' });
+      } else {
+        row.classList.remove('bg-[#f3f1eb]');
+      }
+    });
+  }
+
+  async function openSearch() {
+    if (!modal || !input) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    input.focus();
+    const all = await loadIndex();
+    handleQuery(input.value, all);
+  }
+
+  function closeSearch() {
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  function handleQuery(raw: string, all: SearchItem[]) {
+    const q = raw.trim().toLowerCase();
+    if (!q) {
+      renderResults(all.slice(0, 8), '');
+      return;
+    }
+    const matched = all.filter((item) => {
+      const hay = `${item.title} ${item.summary} ${item.volumeTitle} ${item.tags.join(' ')} ${item.frequency}`.toLowerCase();
+      return hay.includes(q);
+    });
+    renderResults(matched.slice(0, 12), raw);
+  }
+
+  document.querySelectorAll('[data-open-search]').forEach((btn) => {
+    btn.addEventListener('click', openSearch);
+  });
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeSearch();
+  });
+
+  input?.addEventListener('input', async () => {
+    const all = await loadIndex();
+    handleQuery(input.value, all);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (modal?.classList.contains('hidden')) {
+        openSearch();
+      } else {
+        closeSearch();
+      }
+      return;
+    }
+
+    if (modal && !modal.classList.contains('hidden')) {
+      if (e.key === 'Escape') {
+        closeSearch();
+      } else if (e.key === 'ArrowDown' && currentMatches.length > 0) {
+        e.preventDefault();
+        activeIndex = (activeIndex + 1) % currentMatches.length;
+        updateHighlight();
+      } else if (e.key === 'ArrowUp' && currentMatches.length > 0) {
+        e.preventDefault();
+        activeIndex = (activeIndex - 1 + currentMatches.length) % currentMatches.length;
+        updateHighlight();
+      } else if (e.key === 'Enter' && currentMatches[activeIndex]) {
+        e.preventDefault();
+        window.location.href = `/notes/${currentMatches[activeIndex].slug}`;
+      }
+    }
+  });
+</script>
