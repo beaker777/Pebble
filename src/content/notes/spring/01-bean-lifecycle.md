@@ -2,10 +2,10 @@
 title: Spring Bean 生命周期与三级缓存解决循环依赖
 subtitle: 为什么二级缓存不够？为什么构造器注入无法用三级缓存破解？
 volume: spring
+chapter: IoC 容器与 Bean 生命周期
 order: 1
 frequency: 高频必问
 readTime: 6 min
-summary: Bean 经历「实例化 → 属性填充 → Aware/BeanPostProcessor 初始化 → 销毁」流程；Spring 借助三级缓存（singletonFactories 存放 ObjectFactory）在发生循环依赖时按需提前生成 AOP 代理对象，从而兼顾解环与代理规范性。
 tags: [IoC, Bean生命周期, 三级缓存]
 updatedAt: 2026-11-24
 ---

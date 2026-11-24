@@ -7,10 +7,9 @@ const notes = defineCollection({
     title: z.string(),
     subtitle: z.string().optional(),
     volume: z.enum(['mysql', 'redis', 'juc', 'spring']),
+    chapter: z.string().default('核心专题'),
+    chapterOrder: z.number().optional(),
     order: z.number().default(99),
-    frequency: z.enum(['高频必问', '常考进阶', '加分亮点']).default('高频必问'),
-    readTime: z.string().default('4 min'),
-    summary: z.string(),
     tags: z.array(z.string()).default([]),
     updatedAt: z
       .union([z.string(), z.date()])
@@ -19,4 +18,23 @@ const notes = defineCollection({
   }),
 });
 
-export const collections = { notes };
+const chapterEntrySchema = z.union([
+  z.string().transform((title) => ({ title: title.trim(), subtitle: undefined })),
+  z.object({
+    title: z.string().transform((t) => t.trim()),
+    subtitle: z.string().optional(),
+  }),
+]);
+
+const chapterConfigs = defineCollection({
+  loader: glob({ pattern: '*/_chapters.{yaml,yml,json}', base: './src/content/notes' }),
+  schema: z.object({
+    chapters: z
+      .array(chapterEntrySchema)
+      .nullable()
+      .optional()
+      .transform((val) => val ?? []),
+  }),
+});
+
+export const collections = { notes, chapterConfigs };

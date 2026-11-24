@@ -2,10 +2,10 @@
 title: AQS 抽象队列同步器与 ReentrantLock 底层原理
 subtitle: state 状态位、CLH 双向等待队列，以及公平锁与非公平锁的源码差异
 volume: juc
-order: 2
+chapter: 同步器与锁机制
+order: 1
 frequency: 高频必问
 readTime: 5 min
-summary: AQS 核心是「一个 volatile int state 状态位 + 一条 CLH 变体双向 FIFO 等待队列 + CAS 原子操作」；ReentrantLock 借此实现可重入独占锁，默认非公平锁通过允许插队减少线程上下文切换、换取更高吞吐。
 tags: [AQS, ReentrantLock, CAS]
 updatedAt: 2026-11-24
 ---

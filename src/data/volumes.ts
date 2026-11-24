@@ -1,5 +1,10 @@
 export type VolumeId = 'mysql' | 'redis' | 'juc' | 'spring';
 
+export interface ChapterMeta {
+  title: string;
+  subtitle?: string;
+}
+
 export interface VolumeMeta {
   id: VolumeId;
   number: string;
@@ -18,6 +23,7 @@ export interface VolumeMeta {
   clothName: string;
   edition: string;
   designKey: 'mysql' | 'redis' | 'juc' | 'spring';
+  chapters: ChapterMeta[];
 }
 
 export const VOLUMES: VolumeMeta[] = [
@@ -39,6 +45,10 @@ export const VOLUMES: VolumeMeta[] = [
     clothName: 'Olive Buckram Cloth',
     edition: 'First Edition',
     designKey: 'mysql',
+    chapters: [
+      { title: '索引与查询优化', subtitle: 'B+ 树结构、回表、覆盖索引与执行计划' },
+      { title: '事务、锁与 MVCC', subtitle: '隔离级别、版本链、临键锁与日志体系' },
+    ],
   },
   {
     id: 'redis',
@@ -58,6 +68,10 @@ export const VOLUMES: VolumeMeta[] = [
     clothName: 'Ebru Marbled Paper',
     edition: 'First Edition',
     designKey: 'redis',
+    chapters: [
+      { title: '持久化与内存管理', subtitle: 'RDB/AOF 混合持久化、淘汰策略与底层数据结构' },
+      { title: '高并发缓存架构', subtitle: '穿透击穿雪崩治理、双写一致性与分布式锁' },
+    ],
   },
   {
     id: 'juc',
@@ -77,6 +91,10 @@ export const VOLUMES: VolumeMeta[] = [
     clothName: 'Uncoated Archival Board',
     edition: 'First Edition',
     designKey: 'juc',
+    chapters: [
+      { title: '同步器与锁机制', subtitle: 'AQS 队列、CAS 原子操作与 ReentrantLock 源码' },
+      { title: '线程池与并发容器', subtitle: 'ThreadPoolExecutor 流转、拒绝策略与并发集合' },
+    ],
   },
   {
     id: 'spring',
@@ -96,6 +114,10 @@ export const VOLUMES: VolumeMeta[] = [
     clothName: 'Cotton Rag Watercolor',
     edition: 'First Edition',
     designKey: 'spring',
+    chapters: [
+      { title: 'IoC 容器与 Bean 生命周期', subtitle: '实例化、依赖注入、三级缓存与扩展点' },
+      { title: 'AOP 与声明式事务', subtitle: '动态代理机制、传播行为与常见事务失效排查' },
+    ],
   },
 ];
 

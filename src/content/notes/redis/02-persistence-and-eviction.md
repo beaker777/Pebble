@@ -2,10 +2,10 @@
 title: Redis 持久化机制（RDB / AOF）与内存淘汰策略
 subtitle: 为什么生产环境推荐开启混合持久化？fork 阻塞怎么排查？
 volume: redis
-order: 2
+chapter: 持久化与内存管理
+order: 1
 frequency: 高频必问
 readTime: 5 min
-summary: RDB 是紧凑的二进制全量快照（恢复极快但可能丢分钟级数据），AOF 追加写命令日志（everysec 最多丢 1 秒但体积大）；Redis 4.0+ 混合持久化将 RDB 全量头与增量 AOF 融合，兼顾恢复速度与数据安全。
 tags: [RDB, AOF, 内存淘汰]
 updatedAt: 2026-11-24
 ---

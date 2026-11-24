@@ -2,10 +2,10 @@
 title: Spring AOP 动态代理与 @Transactional 失效场景
 subtitle: JDK 动态代理与 CGLIB 的演进，以及线上最容易踩坑的 6 种事务失效
 volume: spring
-order: 2
+chapter: AOP 与声明式事务
+order: 1
 frequency: 高频必问
 readTime: 5 min
-summary: Spring AOP 运行期基于动态代理织入切面（Spring Boot 2.x+ 默认统一使用 CGLIB）；声明式事务依赖代理拦截，凡是绕过代理（同类内部调用）、方法非 public、异常被吞或非 RuntimeException 等场景均会导致事务失效。
 tags: [AOP, 动态代理, 声明式事务]
 updatedAt: 2026-11-24
 ---

@@ -2,10 +2,10 @@
 title: 缓存穿透、击穿、雪崩与双写一致性
 subtitle: 高并发缓存故障治理组合拳，以及为什么推荐「先更新库再删缓存」
 volume: redis
+chapter: 高并发缓存架构
 order: 1
 frequency: 高频必问
 readTime: 5 min
-summary: 穿透用「空值缓存 + 布隆过滤器」，击穿用「互斥锁 / 逻辑过期」，雪崩用「随机过期 + 多级缓存 + 熔断降级」；常规一致性首选 Cache-Aside（先更新 DB，再删缓存，配合异步重试）。
 tags: [缓存架构, 高并发, 一致性]
 updatedAt: 2026-11-24
 ---

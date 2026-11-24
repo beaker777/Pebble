@@ -1,0 +1,8 @@
+# 章节顺序配置：按从上到下排列即为本书的 CHAPTER 01, 02, 03...
+# 支持两种写法：
+#   1. 极简写法：- 章节名
+#   2. 带副标题：- title: 章节名 / subtitle: 副标题
+chapters:
+  - title: Infrastructure
+
+  - title: Index

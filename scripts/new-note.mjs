@@ -4,14 +4,100 @@ import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 
 const VOLUMES = [
-  { id: 'mysql', label: '01 · MySQL' },
-  { id: 'redis', label: '02 · Redis' },
-  { id: 'juc', label: '03 · JUC' },
-  { id: 'spring', label: '04 · Spring' },
+  { id: 'mysql', label: '01 · MySQL', chapters: ['Infrastructure', '索引与查询优化', '事务、锁与 MVCC'] },
+  { id: 'redis', label: '02 · Redis', chapters: ['持久化与内存管理', '高并发缓存架构'] },
+  { id: 'juc', label: '03 · JUC', chapters: ['同步器与锁机制', '线程池与并发容器'] },
+  { id: 'spring', label: '04 · Spring', chapters: ['IoC 容器与 Bean 生命周期', 'AOP 与声明式事务'] },
 ];
 
-const FREQS = ['高频必问', '常考进阶', '加分亮点'];
 const rl = readline.createInterface({ input, output });
+
+function unquote(str) {
+  const s = str.trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    return s.slice(1, -1);
+  }
+  return s;
+}
+
+function yamlScalar(str) {
+  if (/[:#[\]{},&*?|>!%@`]|^\s|\s$/.test(str)) {
+    return JSON.stringify(str);
+  }
+  return str;
+}
+
+function getChapterConfigPath(volId) {
+  return path.join(process.cwd(), 'src', 'content', 'notes', volId, '_chapters.yaml');
+}
+
+function readChapterConfig(volId) {
+  const cfgPath = getChapterConfigPath(volId);
+  if (!fs.existsSync(cfgPath)) return [];
+  const lines = fs.readFileSync(cfgPath, 'utf-8').split(/\r?\n/);
+  const items = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#') || trimmed === 'chapters:') continue;
+    const titleObjMatch = line.match(/^\s*-\s+title:\s*(.+)$/);
+    if (titleObjMatch) {
+      items.push({ title: unquote(titleObjMatch[1]) });
+      continue;
+    }
+    const subtitleMatch = line.match(/^\s+subtitle:\s*(.+)$/);
+    if (subtitleMatch && items.length > 0) {
+      items[items.length - 1].subtitle = unquote(subtitleMatch[1]);
+      continue;
+    }
+    const plainMatch = line.match(/^\s*-\s+(.+)$/);
+    if (plainMatch) {
+      items.push({ title: unquote(plainMatch[1]) });
+    }
+  }
+  return items;
+}
+
+function writeChapterConfig(volId, items) {
+  const cfgPath = getChapterConfigPath(volId);
+  fs.mkdirSync(path.dirname(cfgPath), { recursive: true });
+  const lines = [
+    '# 章节顺序配置：按从上到下排列即为本书的 CHAPTER 01, 02, 03...',
+    '# 支持极简写法（- 章节名）或带副标题写法（title + subtitle）',
+    'chapters:',
+  ];
+  for (const item of items) {
+    if (item.subtitle) {
+      lines.push(`  - title: ${yamlScalar(item.title)}`);
+      lines.push(`    subtitle: ${yamlScalar(item.subtitle)}`);
+    } else {
+      lines.push(`  - ${yamlScalar(item.title)}`);
+    }
+  }
+  fs.writeFileSync(cfgPath, lines.join('\n') + '\n', 'utf-8');
+}
+
+function collectExistingChapters(volId, defaults) {
+  const configured = readChapterConfig(volId).map((c) => c.title);
+  const ordered = configured.length > 0 ? [...configured] : [...defaults];
+  const seen = new Set(ordered);
+
+  const dir = path.join(process.cwd(), 'src', 'content', 'notes', volId);
+  if (fs.existsSync(dir)) {
+    for (const file of fs.readdirSync(dir)) {
+      if (!file.endsWith('.md')) continue;
+      const text = fs.readFileSync(path.join(dir, file), 'utf-8');
+      const m = text.match(/^chapter:\s*(.+)$/m);
+      if (m && m[1]) {
+        const ch = unquote(m[1]);
+        if (ch && !seen.has(ch)) {
+          ordered.push(ch);
+          seen.add(ch);
+        }
+      }
+    }
+  }
+  return ordered;
+}
 
 try {
   console.log('\n📚 Pebble Press · 新建面试八股笔记\n');
@@ -20,7 +106,38 @@ try {
   const volChoice = (await rl.question('\n请选择所属书籍编号 (默认 1): ')).trim() || '1';
   const vol = VOLUMES[Number(volChoice) - 1] || VOLUMES[0];
 
-  const title = (await rl.question('请输入面试题标题: ')).trim();
+  const chapters = collectExistingChapters(vol.id, vol.chapters);
+  console.log(`\n📂 ${vol.label} 现有章节（按当前显示顺序）：`);
+  chapters.forEach((c, i) => console.log(`  [${i + 1}] ${c}`));
+  console.log('  [0] 新建一个章节');
+
+  const chChoice = (await rl.question('\n请选择章节编号 (默认 1): ')).trim() || '1';
+  let chapter = chapters[0];
+  if (chChoice === '0') {
+    const customCh = (await rl.question('请输入新章节名称 (如: 日志与主从复制): ')).trim();
+    chapter = customCh || '核心专题';
+    const customSub = (await rl.question('章节副标题 (可选，直接回车跳过): ')).trim();
+    const posInput = (
+      await rl.question(`该章节排在第几位？(1 ~ ${chapters.length + 1}，默认排在最后 ${chapters.length + 1}): `)
+    ).trim();
+
+    const cfgItems = readChapterConfig(vol.id);
+    const baseItems = cfgItems.length > 0 ? cfgItems : chapters.map((t) => ({ title: t }));
+    if (!baseItems.some((item) => item.title === chapter)) {
+      const posNum = Number(posInput);
+      const insertIdx =
+        posInput && Number.isFinite(posNum)
+          ? Math.max(0, Math.min(baseItems.length, Math.floor(posNum) - 1))
+          : baseItems.length;
+      baseItems.splice(insertIdx, 0, customSub ? { title: chapter, subtitle: customSub } : { title: chapter });
+      writeChapterConfig(vol.id, baseItems);
+      console.log(`📌 已将「${chapter}」写入 ${vol.id}/_chapters.yaml（第 ${insertIdx + 1} 位）`);
+    }
+  } else {
+    chapter = chapters[Number(chChoice) - 1] || chapters[0];
+  }
+
+  const title = (await rl.question('\n请输入面试题标题: ')).trim();
   if (!title) {
     console.log('标题不能为空，已取消。');
     process.exit(1);
@@ -32,15 +149,7 @@ try {
     .replace(/[^a-z0-9-]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-  const summary =
-    (await rl.question('一句话面试速答 (可直接回车稍后填写): ')).trim() ||
-    '请在这里用 1~2 句话概括最核心的面试回答要点。';
-
-  console.log('\n  [1] 高频必问   [2] 常考进阶   [3] 加分亮点');
-  const freqChoice = (await rl.question('请选择考察频率 (默认 1): ')).trim() || '1';
-  const frequency = FREQS[Number(freqChoice) - 1] || FREQS[0];
-
-  const tagsRaw = (await rl.question('标签 (逗号分隔): ')).trim();
+  const tagsRaw = (await rl.question('标签 (逗号分隔，可选): ')).trim();
   const tags = tagsRaw
     ? tagsRaw
         .split(/[,，]/)
@@ -51,20 +160,26 @@ try {
   const dir = path.join(process.cwd(), 'src', 'content', 'notes', vol.id);
   fs.mkdirSync(dir, { recursive: true });
 
-  const existing = fs.readdirSync(dir).filter((f) => f.endsWith('.md'));
-  const nextOrder = existing.length + 1;
-  const prefix = String(nextOrder).padStart(2, '0');
-  const fileName = `${prefix}-${safeSlug}.md`;
+  // Compute next order inside the selected chapter + unique numeric file prefix
+  const mdFiles = fs.readdirSync(dir).filter((f) => f.endsWith('.md'));
+  let chapterCount = 0;
+  for (const f of mdFiles) {
+    const raw = fs.readFileSync(path.join(dir, f), 'utf-8');
+    const m = raw.match(/^chapter:\s*(.+)$/m);
+    if (m && unquote(m[1]) === chapter) chapterCount += 1;
+  }
+
+  const filePrefix = String(mdFiles.length + 1).padStart(2, '0');
+  const nextOrder = chapterCount + 1;
+  const fileName = `${filePrefix}-${safeSlug}.md`;
   const filePath = path.join(dir, fileName);
 
   const today = new Date().toISOString().slice(0, 10);
   const content = `---
 title: ${title}
 volume: ${vol.id}
+chapter: ${chapter}
 order: ${nextOrder}
-frequency: ${frequency}
-readTime: 4 min
-summary: ${summary}
 tags: [${tags.join(', ')}]
 updatedAt: ${today}
 ---
@@ -81,7 +196,8 @@ updatedAt: ${today}
 
   fs.writeFileSync(filePath, content, 'utf-8');
   console.log(`\n✅ 已生成新笔记：${path.relative(process.cwd(), filePath)}`);
-  console.log(`👉 访问路径：/notes/${vol.id}/${prefix}-${safeSlug}\n`);
+  console.log(`📖 归属：${vol.label} → ${chapter} (第 ${nextOrder} 篇)`);
+  console.log(`👉 访问路径：/notes/${vol.id}/${filePrefix}-${safeSlug}\n`);
 } finally {
   rl.close();
 }

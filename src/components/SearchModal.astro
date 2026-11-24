@@ -8,9 +8,9 @@
   aria-modal="true"
   aria-label="检索"
 >
-  <div class="w-full max-w-xl bg-[#ffffff] border border-[#dad6ca] rounded-xl shadow-2xl overflow-hidden">
-    <div class="flex items-center gap-3 px-4 py-3.5 border-b border-[#e4e1d8]">
-      <svg class="w-4 h-4 text-[#6c7380] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <div class="w-full max-w-xl bg-[#e6e7e2] border border-[#c2c5bd] rounded-xl shadow-2xl overflow-hidden">
+    <div class="flex items-center gap-3 px-4 py-3.5 border-b border-[#cdcfc8]">
+      <svg class="w-4 h-4 text-[#5f646d] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="7"></circle>
         <path d="M20 20l-3.5-3.5"></path>
       </svg>
@@ -18,17 +18,17 @@
         id="search-input"
         type="text"
         placeholder="检索篇目、标签或关键词..."
-        class="w-full bg-transparent text-sm text-[#131720] placeholder-[#8b919d] focus:outline-none"
+        class="w-full bg-transparent text-sm text-[#1b1e23] placeholder-[#737882] focus:outline-none"
         autocomplete="off"
       />
-      <kbd class="font-mono-meta text-[10px] text-[#6c7380] bg-[#f3f1eb] border border-[#e4e1d8] px-1.5 py-0.5 rounded">
+      <kbd class="font-mono-meta text-[10px] text-[#595e66] bg-[#dadcd5] border border-[#c4c7bf] px-1.5 py-0.5 rounded">
         ESC
       </kbd>
     </div>
 
-    <div id="search-results" class="max-h-[55vh] overflow-y-auto divide-y divide-[#efede6]"></div>
+    <div id="search-results" class="max-h-[55vh] overflow-y-auto divide-y divide-[#d4d7cf]"></div>
 
-    <div class="flex items-center justify-end px-4 py-2 bg-[#fafaf7] border-t border-[#e4e1d8] text-[10px] font-mono-meta text-[#6c7380]">
+    <div class="flex items-center justify-end px-4 py-2 bg-[#dfe1db] border-t border-[#cdcfc8] text-[10px] font-mono-meta text-[#5f646d]">
       <span>↑ ↓ · ↵ · ESC</span>
     </div>
   </div>
@@ -38,12 +38,12 @@
   interface SearchItem {
     slug: string;
     title: string;
-    summary: string;
     volume: string;
     volumeNumber: string;
     volumeTitle: string;
     volumeColor: string;
-    frequency: string;
+    chapter: string;
+    sectionCode: string;
     tags: string[];
   }
 
@@ -85,17 +85,13 @@
         <a
           href="/notes/${item.slug}"
           data-search-idx="${idx}"
-          class="search-row block px-4 py-3 transition ${idx === 0 ? 'bg-[#f3f1eb]' : 'hover:bg-[#fafaf7]'}"
+          class="search-row block px-4 py-3 transition ${idx === 0 ? 'bg-[#d8dad3]' : 'hover:bg-[#dfe1da]'}"
         >
-          <div class="flex items-center justify-between gap-2 mb-0.5">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="inline-block w-2 h-2 rounded-full shrink-0" style="background:${item.volumeColor};"></span>
-              <span class="font-mono-meta text-[11px] text-[#6c7380] shrink-0">${escapeHtml(item.volumeNumber)} · ${escapeHtml(item.volumeTitle)}</span>
-            </div>
-            <span class="font-mono-meta text-[10px] px-1.5 py-0.5 rounded bg-[#f3f1eb] text-[#434a56] shrink-0">${escapeHtml(item.frequency)}</span>
+          <div class="flex items-center gap-2 min-w-0 mb-0.5">
+            <span class="inline-block w-2 h-2 rounded-full shrink-0" style="background:${item.volumeColor};"></span>
+            <span class="font-mono-meta text-[11px] text-[#5f646d] truncate">${escapeHtml(item.volumeTitle)} · ${escapeHtml(item.chapter)} · ${escapeHtml(item.sectionCode)}</span>
           </div>
-          <div class="text-sm font-semibold text-[#131720]">${escapeHtml(item.title)}</div>
-          <div class="text-xs text-[#6c7380] mt-0.5 line-clamp-1">${escapeHtml(item.summary)}</div>
+          <div class="font-note-heading text-sm font-semibold text-[#1b1e23]">${escapeHtml(item.title)}</div>
         </a>
       `
       )
@@ -107,10 +103,10 @@
     if (!rows) return;
     rows.forEach((row, idx) => {
       if (idx === activeIndex) {
-        row.classList.add('bg-[#f3f1eb]');
+        row.classList.add('bg-[#d8dad3]');
         row.scrollIntoView({ block: 'nearest' });
       } else {
-        row.classList.remove('bg-[#f3f1eb]');
+        row.classList.remove('bg-[#d8dad3]');
       }
     });
   }
@@ -137,7 +133,7 @@
       return;
     }
     const matched = all.filter((item) => {
-      const hay = `${item.title} ${item.summary} ${item.volumeTitle} ${item.tags.join(' ')} ${item.frequency}`.toLowerCase();
+      const hay = `${item.title} ${item.volumeTitle} ${item.chapter} ${item.tags.join(' ')}`.toLowerCase();
       return hay.includes(q);
     });
     renderResults(matched.slice(0, 12), raw);

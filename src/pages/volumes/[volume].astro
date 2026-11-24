@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Book3D from '../../components/Book3D.astro';
 import { getCollection } from 'astro:content';
 import { VOLUMES, type VolumeMeta } from '../../data/volumes';
+import { buildVolumeChapters } from '../../utils/chapters';
 
 export async function getStaticPaths() {
   return VOLUMES.map((volume) => ({
@@ -16,22 +17,23 @@ interface Props {
 }
 
 const { volume } = Astro.props;
-const allNotes = await getCollection('notes');
-const volumeNotes = allNotes
-  .filter((n) => n.data.volume === volume.id)
-  .sort((a, b) => a.data.order - b.data.order);
+const [allNotes, allChapterConfigs] = await Promise.all([
+  getCollection('notes'),
+  getCollection('chapterConfigs'),
+]);
+const { chapters, flatArticles } = buildVolumeChapters(volume, allNotes, allChapterConfigs);
 
-const firstNote = volumeNotes[0];
+const firstArticle = flatArticles[0];
 const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 'spring' ? '#4D6658' : volume.coverBg;
 ---
 
 <BaseLayout title={`${volume.title} — Pebble Press`}>
-  <div class="bg-[#f9f7f1]">
+  <div class="bg-[#e4e5e0]">
     <!-- Editorial Book Prospectus Hero -->
-    <section class="border-b border-[#e4e0d5]">
+    <section class="border-b border-[#cdcfc8]">
       <div class="max-w-[1380px] mx-auto px-5 sm:px-10 pt-7 pb-16">
-        <div class="mb-9 flex items-center justify-between font-mono-meta text-[11px] tracking-[0.14em] uppercase text-[#757268]">
-          <a href="/#volumes" class="inline-flex items-center gap-1.5 hover:text-[#141820] transition">
+        <div class="mb-9 flex items-center justify-between font-mono-meta text-[11px] tracking-[0.14em] uppercase text-[#5f646d]">
+          <a href="/#volumes" class="inline-flex items-center gap-1.5 hover:text-[#1b1e23] transition">
             <span>←</span>
             <span>[ VOLUMES ]</span>
           </a>
@@ -39,7 +41,7 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
-          <!-- 360° Interactive Hardcover Display (0KB Three.js subpage!) -->
+          <!-- 360° Interactive Hardcover Display -->
           <div class="md:col-span-5 flex flex-col items-center">
             <div
               id="detail-book-stage"
@@ -55,11 +57,11 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
               </div>
             </div>
 
-            <div class="mt-2 flex items-center gap-4 font-mono-meta text-[10.5px] tracking-[0.12em] uppercase text-[#757268]">
-              <button id="detail-flip-btn" type="button" class="hover:text-[#141820] transition cursor-pointer">
+            <div class="mt-2 flex items-center gap-4 font-mono-meta text-[10.5px] tracking-[0.12em] uppercase text-[#5f646d]">
+              <button id="detail-flip-btn" type="button" class="hover:text-[#1b1e23] transition cursor-pointer">
                 [ ↻ 翻转书背 ]
               </button>
-              <button id="detail-spine-btn" type="button" class="hover:text-[#141820] transition cursor-pointer">
+              <button id="detail-spine-btn" type="button" class="hover:text-[#1b1e23] transition cursor-pointer">
                 [ 查看书脊 ]
               </button>
             </div>
@@ -68,50 +70,50 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
           <!-- Fine-Press Book Prospectus -->
           <div class="md:col-span-7 space-y-6">
             <div>
-              <div class="font-mono-meta text-[11px] uppercase tracking-[0.18em] text-[#757268]">
+              <div class="font-mono-meta text-[11px] uppercase tracking-[0.18em] text-[#5f646d]">
                 VOL. {volume.number} · {volume.authorLine}
               </div>
-              <h1 class="font-editorial text-5xl sm:text-[4.25rem] font-bold tracking-[-0.02em] text-[#11151d] mt-2 leading-[0.98]">
+              <h1 class="font-editorial text-5xl sm:text-[4.25rem] font-bold tracking-[-0.02em] text-[#1b1e23] mt-2 leading-[0.98]">
                 {volume.title}
               </h1>
-              <p class="font-book-serif italic text-xl text-[#5c626d] mt-3">
+              <p class="font-book-serif italic text-xl text-[#4e535c] mt-3">
                 {volume.subtitle}
               </p>
             </div>
 
             <div class="editorial-double-rule max-w-xl"></div>
 
-            <p class="text-[15.5px] leading-[1.9] text-[#3f4652] max-w-2xl">
+            <p class="text-[15px] leading-[1.9] text-[#32363d] max-w-2xl">
               {volume.description}
             </p>
 
-            <div class="border-y border-[#e2ded3] py-4 grid grid-cols-3 gap-6 text-xs max-w-lg">
+            <div class="border-y border-[#c8cbc3] py-4 grid grid-cols-3 gap-6 text-xs max-w-lg">
               <div>
-                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#757268]">BINDING</div>
-                <div class="mt-1.5 font-medium text-[#141820] flex items-center gap-2">
+                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#5f646d]">BINDING</div>
+                <div class="mt-1.5 font-medium text-[#1b1e23] flex items-center gap-2">
                   <span class="w-2.5 h-2.5 rounded-full inline-block" style={`background:${accentInk};`}></span>
                   <span>{volume.clothName}</span>
                 </div>
               </div>
               <div>
-                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#757268]">CHAPTERS</div>
-                <div class="mt-1.5 font-mono-meta font-semibold text-[#141820]">
-                  {String(volumeNotes.length).padStart(2, '0')} 篇
+                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#5f646d]">STRUCTURE</div>
+                <div class="mt-1.5 font-mono-meta font-semibold text-[#1b1e23]">
+                  {String(chapters.length).padStart(2, '0')} 章 · {String(flatArticles.length).padStart(2, '0')} 篇
                 </div>
               </div>
               <div>
-                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#757268]">MASTERED</div>
+                <div class="font-mono-meta text-[10px] uppercase tracking-[0.14em] text-[#5f646d]">MASTERED</div>
                 <div id="vol-mastery-stat" class="mt-1.5 font-mono-meta font-semibold" style={`color:${accentInk};`}>
-                  0 / {volumeNotes.length}
+                  0 / {flatArticles.length}
                 </div>
               </div>
             </div>
 
-            {firstNote && (
+            {firstArticle && (
               <div class="pt-1">
                 <a
-                  href={`/notes/${firstNote.id}`}
-                  class="inline-flex items-center gap-2.5 px-6 py-2.5 font-mono-meta text-xs tracking-[0.14em] uppercase bg-[#141820] text-[#f9f7f1] hover:bg-[#252c3b] transition"
+                  href={`/notes/${firstArticle.note.id}`}
+                  class="inline-flex items-center gap-2.5 px-6 py-2.5 font-mono-meta text-xs tracking-[0.14em] uppercase bg-[#22262c] text-[#e4e5e0] hover:bg-[#31363f] transition"
                 >
                   <span>START READING</span>
                   <span>→</span>
@@ -123,68 +125,87 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
       </div>
     </section>
 
-    <!-- Museum-Clean Unboxed Literary Table of Contents -->
+    <!-- Multi-Chapter E-Ink Table of Contents -->
     <section id="toc" class="max-w-4xl mx-auto px-5 sm:px-10 py-16">
-      <div class="flex items-baseline justify-between pb-5 border-b border-[#181c24]">
+      <div class="flex items-baseline justify-between pb-5 border-b-[1.5px] border-[#2b2f36]">
         <div class="flex items-baseline gap-3">
-          <span class="font-mono-meta text-[11px] uppercase tracking-[0.16em] text-[#757268]">
+          <span class="font-mono-meta text-[11px] uppercase tracking-[0.16em] text-[#5f646d]">
             [ TABLE OF CONTENTS ]
           </span>
-          <h2 class="font-editorial text-2xl sm:text-3xl font-bold text-[#11151d]">
-            本册篇目
+          <h2 class="font-note-heading text-xl sm:text-2xl font-semibold text-[#1b1e23]">
+            章节目录
           </h2>
         </div>
-        <span class="font-mono-meta text-[11px] text-[#757268]">
-          {String(volumeNotes.length).padStart(2, '0')} CHAPTERS
+        <span class="font-mono-meta text-[11px] text-[#5f646d]">
+          {String(chapters.length).padStart(2, '0')} CHAPTERS · {String(flatArticles.length).padStart(2, '0')} ESSAYS
         </span>
       </div>
 
-      <div class="divide-y divide-[#e4e0d5]">
-        {volumeNotes.map((note, idx) => (
-          <a
-            href={`/notes/${note.id}`}
-            data-vol-note-slug={note.id}
-            class="group block py-8 transition"
-          >
-            <div class="grid grid-cols-12 gap-4 items-baseline">
-              <div class="col-span-2 sm:col-span-1 flex items-center gap-2">
-                <span class="font-editorial text-2xl font-semibold text-[#9a9588] group-hover:text-[#141820] transition">
-                  {String(idx + 1).padStart(2, '0')}
-                </span>
+      <!-- Chapter Blocks -->
+      <div class="mt-12 space-y-14">
+        {chapters.map((chapter) => (
+          <div data-chapter-block={chapter.chapterIndex}>
+            <!-- Chapter Header -->
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-4 border-b border-[#c2c5bd]">
+              <div>
+                <div class="flex items-center gap-2.5 font-mono-meta text-[10.5px] tracking-[0.18em] uppercase text-[#5f646d]">
+                  <span class="w-2 h-2 rounded-full inline-block" style={`background-color: ${accentInk};`}></span>
+                  <span>CHAPTER {chapter.numberLabel}</span>
+                </div>
+                <h3 class="font-note-heading text-xl sm:text-[1.48rem] font-semibold text-[#1b1e23] mt-1 leading-tight">
+                  {chapter.title}
+                </h3>
+                {chapter.subtitle && (
+                  <p class="text-[13.5px] text-[#595e66] mt-1">
+                    {chapter.subtitle}
+                  </p>
+                )}
               </div>
 
-              <div class="col-span-10 sm:col-span-9 space-y-2">
-                <div class="flex flex-wrap items-center gap-3">
-                  <h3 class="font-editorial text-2xl font-bold text-[#141820] group-hover:underline underline-offset-4 decoration-[#bfb9aa] transition">
-                    {note.data.title}
-                  </h3>
-                  <span data-vol-check={note.id} class="font-mono-meta text-xs" style={`color:${accentInk};`}></span>
-                </div>
-
-                <p class="text-[14.5px] text-[#525864] leading-relaxed">
-                  {note.data.summary}
-                </p>
-
-                <div class="flex flex-wrap items-center gap-3 pt-1 font-mono-meta text-[11px] text-[#757268]">
-                  <span class="inline-flex items-center gap-1.5" style={`color:${accentInk};`}>
-                    <span class="w-1.5 h-1.5 rounded-full inline-block" style={`background:${accentInk};`}></span>
-                    <span>{note.data.frequency}</span>
-                  </span>
-                  {note.data.tags.length > 0 && (
-                    <>
-                      <span class="opacity-40">·</span>
-                      <span>{note.data.tags.join(' / ')}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div class="hidden sm:flex col-span-2 flex-col items-end justify-between gap-2 font-mono-meta text-[11px] text-[#757268]">
-                <span>{note.data.readTime}</span>
-                <span class="text-[#141820] opacity-0 group-hover:opacity-100 transition">READ →</span>
+              <div class="font-mono-meta text-[11px] text-[#5f646d] shrink-0">
+                <span data-chapter-mastery={chapter.chapterIndex}>0</span> / {chapter.items.length} 已掌握
               </div>
             </div>
-          </a>
+
+            <!-- Articles Under This Chapter -->
+            <div class="divide-y divide-[#cfd2ca]">
+              {chapter.items.map((item) => (
+                <a
+                  href={`/notes/${item.note.id}`}
+                  data-vol-note-slug={item.note.id}
+                  data-vol-chapter-idx={chapter.chapterIndex}
+                  class="group block py-4 sm:pl-4 transition"
+                >
+                  <div class="grid grid-cols-12 gap-4 items-baseline">
+                    <div class="col-span-2 sm:col-span-1">
+                      <span class="font-mono-meta text-sm font-medium text-[#6f747d] group-hover:text-[#1b1e23] transition">
+                        {item.sectionCode}
+                      </span>
+                    </div>
+
+                    <div class="col-span-10 sm:col-span-9 space-y-1">
+                      <div class="flex flex-wrap items-center gap-3">
+                        <h4 class="font-note-heading text-[1.05rem] sm:text-[1.12rem] font-semibold text-[#1f2329] group-hover:underline underline-offset-4 decoration-[#9ea39d] transition">
+                          {item.note.data.title}
+                        </h4>
+                        <span data-vol-check={item.note.id} class="font-mono-meta text-xs" style={`color:${accentInk};`}></span>
+                      </div>
+
+                      {item.note.data.tags.length > 0 && (
+                        <div class="flex flex-wrap items-center gap-2 pt-0.5 font-mono-meta text-[11px] text-[#5f646d]">
+                          <span>{item.note.data.tags.join(' / ')}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div class="hidden sm:flex col-span-2 items-center justify-end font-mono-meta text-[11px] text-[#5f646d]">
+                      <span class="text-[#1b1e23] opacity-0 group-hover:opacity-100 transition">READ →</span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </section>
@@ -388,18 +409,28 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
   function syncVolumePage() {
     const mastered = new Set(window.PebbleMastery?.getAll() || []);
     const items = document.querySelectorAll('[data-vol-note-slug]');
-    let done = 0;
+    let totalDone = 0;
+    const chapterDone: Record<string, number> = {};
 
     items.forEach((el) => {
       const slug = el.getAttribute('data-vol-note-slug') || '';
+      const chIdx = el.getAttribute('data-vol-chapter-idx') || '';
       const isDone = mastered.has(slug);
-      if (isDone) done += 1;
+      if (isDone) {
+        totalDone += 1;
+        chapterDone[chIdx] = (chapterDone[chIdx] || 0) + 1;
+      }
       const check = el.querySelector(`[data-vol-check="${slug}"]`);
       if (check) check.textContent = isDone ? '✓ 已掌握' : '';
     });
 
     const stat = document.getElementById('vol-mastery-stat');
-    if (stat) stat.textContent = `${done} / ${items.length}`;
+    if (stat) stat.textContent = `${totalDone} / ${items.length}`;
+
+    document.querySelectorAll('[data-chapter-mastery]').forEach((el) => {
+      const chIdx = el.getAttribute('data-chapter-mastery') || '';
+      el.textContent = String(chapterDone[chIdx] || 0);
+    });
   }
 
   syncVolumePage();

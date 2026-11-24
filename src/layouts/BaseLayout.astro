@@ -12,7 +12,12 @@ import '@fontsource/inter/600.css';
 import '@fontsource/inter/700.css';
 import '@fontsource/inter/800.css';
 import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/400-italic.css';
 import '@fontsource/jetbrains-mono/500.css';
+import '@fontsource/jetbrains-mono/600.css';
+import '@fontsource/jetbrains-mono/700.css';
+import '@fontsource/noto-sans-sc/400.css';
+import '@fontsource/noto-sans-sc/600.css';
 
 import '../styles/global.css';
 import SearchModal from '../components/SearchModal.astro';
@@ -47,7 +52,7 @@ const isGallery = theme === 'gallery';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title}</title>
+    <title>Pebble Press</title>
   </head>
   <body class="flex flex-col min-h-screen">
     <!-- Zero-blur lightweight Masthead -->
@@ -56,7 +61,7 @@ const isGallery = theme === 'gallery';
       data-header-theme={theme}
       class:list={[
         'sticky top-0 z-40 border-b transition-colors duration-500',
-        !isGallery && 'bg-[#fafaf7] border-[#e4e1d8]',
+        !isGallery && 'bg-[#dfe1db] border-[#cdcfc8]',
       ]}
       style={
         isGallery
@@ -80,7 +85,7 @@ const isGallery = theme === 'gallery';
           <span
             class:list={[
               'font-mono-meta text-xs font-medium tracking-[0.18em] uppercase',
-              !isGallery && 'text-[#131720]',
+              !isGallery && 'text-[#1b1e23]',
             ]}
           >
             PEBBLE PRESS
@@ -90,7 +95,7 @@ const isGallery = theme === 'gallery';
         <nav
           class:list={[
             'hidden md:flex items-center gap-8 font-mono-meta text-[11px] tracking-[0.14em] uppercase',
-            isGallery ? 'opacity-80' : 'text-[#434a56]',
+            isGallery ? 'opacity-80' : 'text-[#4a4f57]',
           ]}
         >
           <a href="/#volumes" class="hover:opacity-100 transition">Volumes</a>
@@ -101,7 +106,7 @@ const isGallery = theme === 'gallery';
           <div
             class:list={[
               'hidden sm:flex items-center gap-1.5 font-mono-meta text-[11px]',
-              isGallery ? 'opacity-80' : 'text-[#434a56]',
+              isGallery ? 'opacity-80' : 'text-[#4a4f57]',
             ]}
             title="已掌握进度"
           >
@@ -119,7 +124,7 @@ const isGallery = theme === 'gallery';
               'flex items-center gap-2 px-2.5 py-1 text-xs rounded transition cursor-pointer border',
               isGallery
                 ? 'border-current/25 hover:border-current/55 hover:bg-white/5'
-                : 'text-[#434a56] bg-[#ffffff] hover:bg-[#f3f1eb] border-[#dcd8cc]',
+                : 'text-[#3a3f47] bg-[#e6e7e2] hover:bg-[#d8dad3] border-[#c4c7bf]',
             ]}
           >
             <svg class="w-3.5 h-3.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -137,8 +142,8 @@ const isGallery = theme === 'gallery';
     </main>
 
     <!-- Quiet Minimal Footer -->
-    <footer class="border-t border-[#e4e1d8] bg-[#fafaf7]">
-      <div class="max-w-[1440px] mx-auto px-5 sm:px-8 py-6 flex items-center justify-between text-[11px] font-mono-meta text-[#6c7380]">
+    <footer class="border-t border-[#cdcfc8] bg-[#dfe1db]">
+      <div class="max-w-[1440px] mx-auto px-5 sm:px-8 py-6 flex items-center justify-between text-[11px] font-mono-meta text-[#5c616a]">
         <span>PEBBLE PRESS · 拾石集</span>
         <span>{String(VOLUMES.length).padStart(2, '0')} VOLUMES · {String(totalCount).padStart(2, '0')} ESSAYS</span>
       </div>

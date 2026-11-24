@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { VOLUME_MAP } from '../../data/volumes';
+import { buildVolumeChapters } from '../../utils/chapters';
 
 export async function getStaticPaths() {
   const notes = await getCollection('notes');
@@ -19,20 +20,28 @@ const { note } = Astro.props;
 const { Content, headings } = await render(note);
 const volume = VOLUME_MAP[note.data.volume];
 
-const allNotes = await getCollection('notes');
-const volumeNotes = allNotes
-  .filter((n) => n.data.volume === note.data.volume)
-  .sort((a, b) => a.data.order - b.data.order);
+const [allNotes, allChapterConfigs] = await Promise.all([
+  getCollection('notes'),
+  getCollection('chapterConfigs'),
+]);
+const { chapters, flatArticles } = buildVolumeChapters(volume, allNotes, allChapterConfigs);
 
-const currentIdx = volumeNotes.findIndex((n) => n.id === note.id);
-const prevNote = currentIdx > 0 ? volumeNotes[currentIdx - 1] : null;
-const nextNote = currentIdx >= 0 && currentIdx < volumeNotes.length - 1 ? volumeNotes[currentIdx + 1] : null;
+const currentIdx = flatArticles.findIndex((item) => item.note.id === note.id);
+const currentEntry = flatArticles[currentIdx];
+const prevEntry = currentIdx > 0 ? flatArticles[currentIdx - 1] : null;
+const nextEntry = currentIdx >= 0 && currentIdx < flatArticles.length - 1 ? flatArticles[currentIdx + 1] : null;
 
 const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 'spring' ? '#4D6658' : volume.coverBg;
+const chapterLabel = currentEntry ? String(currentEntry.chapterIndex).padStart(2, '0') : '01';
+const sectionCode = currentEntry?.sectionCode || '1.1';
+const chapterTitle = currentEntry?.chapterTitle || note.data.chapter;
 ---
 
-<BaseLayout title={`${note.data.title} — ${volume.title} · Pebble Press`} description={note.data.summary}>
+<BaseLayout
+  title={`${note.data.title} — ${volume.title} · Pebble Press`}
+  description={note.data.subtitle || `${volume.title} · ${chapterTitle}`}
+>
   <!-- Hairline Reading Progress Bar -->
   <div class="fixed top-[50px] left-0 right-0 h-[2px] z-40 pointer-events-none bg-transparent">
     <div
@@ -42,101 +51,139 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
     ></div>
   </div>
 
-  <!-- Seamless Museum Paper Surface (Unboxed Fine-Press Reading Room) -->
-  <div class="bg-[#f9f7f1] min-h-[calc(100vh-50px)]" style={`--vol-accent: ${accentInk};`}>
+  <!-- E-Ink Matte Gray Unboxed Reading Room -->
+  <div class="bg-[#e4e5e0] min-h-[calc(100vh-50px)]" style={`--vol-accent: ${accentInk};`}>
     <!-- Quiet Archival Breadcrumb Strip -->
-    <div class="border-b border-[#e5e1d6]">
-      <div class="max-w-[1460px] mx-auto px-5 sm:px-10 h-11 flex items-center justify-between gap-4 text-[11px] font-mono-meta tracking-[0.12em] uppercase text-[#757268]">
+    <div class="border-b border-[#cdcfc8]">
+      <div class="max-w-[1480px] mx-auto px-5 sm:px-10 h-11 flex items-center justify-between gap-4 text-[11px] font-mono-meta tracking-[0.12em] uppercase text-[#5f646d]">
         <nav class="flex items-center gap-2.5 min-w-0">
-          <a href="/" class="hover:text-[#141820] transition">VOLUMES</a>
+          <a href="/" class="hover:text-[#1b1e23] transition shrink-0">VOLUMES</a>
           <span class="opacity-45">/</span>
-          <a href={`/volumes/${volume.id}`} class="hover:text-[#141820] transition flex items-center gap-2">
+          <a href={`/volumes/${volume.id}`} class="hover:text-[#1b1e23] transition flex items-center gap-2 shrink-0">
             <span class="w-2 h-2 rounded-full inline-block" style={`background:${accentInk};`}></span>
             <span>{volume.title}</span>
           </a>
           <span class="hidden sm:inline opacity-45">/</span>
-          <span class="hidden sm:inline text-[#141820]">CHAPTER {String(currentIdx + 1).padStart(2, '0')}</span>
+          <span class="hidden sm:inline normal-case tracking-normal text-[#434850] truncate">
+            CH.{chapterLabel} · {chapterTitle}
+          </span>
+          <span class="hidden md:inline opacity-45">/</span>
+          <span class="hidden md:inline text-[#1b1e23] shrink-0">{sectionCode}</span>
         </nav>
 
-        <div class="flex items-center gap-4 shrink-0">
-          <span>{note.data.readTime}</span>
-          {note.data.updatedAt && <span class="hidden sm:inline opacity-70">{note.data.updatedAt}</span>}
-        </div>
+        {note.data.updatedAt && (
+          <div class="flex items-center gap-4 shrink-0">
+            <span class="hidden sm:inline opacity-75">{note.data.updatedAt}</span>
+          </div>
+        )}
       </div>
     </div>
 
     <!-- Wide Open Editorial 3-Column Reading Grid -->
-    <div class="max-w-[1460px] mx-auto px-5 sm:px-10 py-11 lg:py-14 grid grid-cols-1 lg:grid-cols-[215px_minmax(0,1fr)] xl:grid-cols-[215px_minmax(0,1fr)_185px] gap-10 xl:gap-14 items-start">
-      <!-- Left Rail: Unboxed Quiet Volume Index -->
-      <aside class="hidden lg:block sticky top-24 pr-4 border-r border-[#e6e2d7]">
-        <a href={`/volumes/${volume.id}`} class="group block pb-5 mb-5 border-b border-[#e6e2d7]">
+    <div class="max-w-[1480px] mx-auto px-5 sm:px-10 py-11 lg:py-14 grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)_185px] gap-10 xl:gap-14 items-start">
+      <!-- Left Rail: Grouped Collapsible Multi-Chapter Book Index -->
+      <aside class="hidden lg:block sticky top-24 pr-4 border-r border-[#cdcfc8] max-h-[calc(100vh-7.5rem)] overflow-y-auto no-scrollbar">
+        <a href={`/volumes/${volume.id}`} class="group block pb-5 mb-5 border-b border-[#cdcfc8]">
           <div class="flex items-center gap-2">
             <span class="w-[3px] h-4 rounded-full" style={`background-color: ${accentInk};`}></span>
-            <span class="font-mono-meta text-[10px] tracking-[0.18em] uppercase text-[#757268]">
+            <span class="font-mono-meta text-[10px] tracking-[0.18em] uppercase text-[#5f646d]">
               VOL. {volume.number}
             </span>
           </div>
-          <div class="font-editorial text-2xl font-bold text-[#141820] group-hover:opacity-75 transition mt-1.5 leading-none">
+          <div class="font-editorial text-2xl font-bold text-[#1b1e23] group-hover:opacity-75 transition mt-1.5 leading-none">
             {volume.title}
           </div>
-          <div class="font-book-serif italic text-xs text-[#757268] mt-1.5">
+          <div class="font-book-serif italic text-xs text-[#5f646d] mt-1.5">
             {volume.subtitle}
           </div>
         </a>
 
-        <div class="space-y-1">
-          {volumeNotes.map((item, idx) => {
-            const active = item.id === note.id;
+        <div class="space-y-4">
+          {chapters.map((chapter) => {
+            const hasActive = chapter.items.some((item) => item.note.id === note.id);
             return (
-              <a
-                href={`/notes/${item.id}`}
-                data-sidebar-slug={item.id}
-                class:list={[
-                  'relative flex items-start gap-2.5 py-2.5 pl-3 pr-1 text-[13px] leading-snug transition border-l-[2px]',
-                  active
-                    ? 'text-[#141820] font-medium'
-                    : 'border-transparent text-[#6f6c63] hover:text-[#141820]',
-                ]}
-                style={active ? `border-left-color: ${accentInk};` : undefined}
-              >
-                <span class="font-mono-meta text-[10.5px] opacity-65 shrink-0 mt-0.5">
-                  {String(idx + 1).padStart(2, '0')}
-                </span>
-                <span class="flex-1">{item.data.title}</span>
-                <span data-sidebar-check={item.id} class="font-mono-meta text-[11px] shrink-0" style={`color:${accentInk};`}></span>
-              </a>
+              <details open class="group/ch">
+                <summary class="list-none cursor-pointer flex items-center justify-between gap-2 py-1.5 select-none">
+                  <div class="min-w-0">
+                    <div class="font-mono-meta text-[9.5px] tracking-[0.16em] uppercase text-[#6a6f78]">
+                      CH.{chapter.numberLabel}
+                    </div>
+                    <div
+                      class:list={[
+                        'font-note-heading text-[13px] font-semibold leading-snug truncate mt-0.5',
+                        hasActive ? 'text-[#1b1e23]' : 'text-[#484d55] group-hover/ch:text-[#1b1e23]',
+                      ]}
+                    >
+                      {chapter.title}
+                    </div>
+                  </div>
+                  <svg
+                    class="w-3.5 h-3.5 text-[#6a6f78] shrink-0 transition-transform duration-200 group-open/ch:rotate-90"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <path d="M7 5l6 5-6 5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </summary>
+
+                <div class="mt-1.5 ml-1 space-y-0.5 border-l border-[#c8cbc3]">
+                  {chapter.items.map((item) => {
+                    const active = item.note.id === note.id;
+                    return (
+                      <a
+                        href={`/notes/${item.note.id}`}
+                        data-sidebar-slug={item.note.id}
+                        class:list={[
+                          'relative -ml-[1px] flex items-start gap-2 py-2 pl-3 pr-1 text-[12.5px] leading-snug transition border-l-[2px]',
+                          active
+                            ? 'text-[#1b1e23] font-medium'
+                            : 'border-transparent text-[#595e66] hover:text-[#1b1e23]',
+                        ]}
+                        style={active ? `border-left-color: ${accentInk};` : undefined}
+                      >
+                        <span class="font-mono-meta text-[10px] opacity-65 shrink-0 mt-0.5">
+                          {item.sectionCode}
+                        </span>
+                        <span class="flex-1">{item.note.data.title}</span>
+                        <span
+                          data-sidebar-check={item.note.id}
+                          class="font-mono-meta text-[11px] shrink-0"
+                          style={`color:${accentInk};`}
+                        ></span>
+                      </a>
+                    );
+                  })}
+                </div>
+              </details>
             );
           })}
         </div>
       </aside>
 
-      <!-- Center: Unboxed Seamless Fine-Press Monograph Sheet -->
+      <!-- Center: Unboxed Seamless E-Ink Developer Monograph Sheet -->
       <article class="min-w-0 w-full max-w-[880px] mx-auto">
-        <!-- Classic Book Chapter Masthead -->
-        <header class="space-y-5 pb-8">
-          <div class="flex flex-wrap items-center gap-3 font-mono-meta text-[11px] tracking-[0.14em] uppercase text-[#757268]">
-            <span>[ CHAPTER {String(currentIdx + 1).padStart(2, '0')} ]</span>
-            <span class="opacity-40">·</span>
-            <span class="inline-flex items-center gap-1.5" style={`color: ${accentInk};`}>
-              <span class="w-1.5 h-1.5 rounded-full inline-block" style={`background-color: ${accentInk};`}></span>
-              <span>{note.data.frequency}</span>
-            </span>
+        <!-- Classic Book Chapter & Section Masthead -->
+        <header class="space-y-4 pb-6">
+          <div class="flex flex-wrap items-center gap-3 font-mono-meta text-[11px] tracking-[0.12em] text-[#5f646d]">
+            <span class="uppercase">[ CH.{chapterLabel} · {sectionCode} ]</span>
+            <span class="opacity-45">·</span>
+            <span class="text-[#353941] font-medium">{chapterTitle}</span>
             {note.data.tags.length > 0 && (
               <>
-                <span class="opacity-40">·</span>
-                <span class="normal-case tracking-normal text-[#757268]">
-                  {note.data.tags.join(' / ')}
-                </span>
+                <span class="opacity-45">·</span>
+                <span class="text-[#5f646d]">{note.data.tags.join(' / ')}</span>
               </>
             )}
           </div>
 
-          <h1 class="font-editorial text-3xl sm:text-[2.75rem] font-bold tracking-[-0.02em] leading-[1.18] text-[#11151d]">
+          <h1 class="font-note-heading text-[1.45rem] sm:text-[1.78rem] font-semibold tracking-[-0.015em] leading-[1.35] text-[#1b1e23]">
             {note.data.title}
           </h1>
 
           {note.data.subtitle && (
-            <p class="font-book-serif italic text-[17px] sm:text-[19px] text-[#555b66] leading-relaxed">
+            <p class="text-[14.5px] sm:text-[15.5px] text-[#525760] leading-relaxed">
               {note.data.subtitle}
             </p>
           )}
@@ -145,34 +192,21 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
         <!-- Classical Printed Double Rule -->
         <div class="editorial-double-rule mb-9"></div>
 
-        <!-- Literary Epigraph / Interview One-Liner Abstract -->
-        <aside
-          class="relative mb-11 px-6 sm:px-7 py-5 bg-[#f2efe6] border-l-[2.5px]"
-          style={`border-left-color: ${accentInk};`}
-        >
-          <div class="font-mono-meta text-[10px] tracking-[0.18em] uppercase text-[#757268] mb-2">
-            EPIGRAPH · 面试一句话速答
-          </div>
-          <p class="text-[15.5px] leading-[1.85] text-[#161b24] font-medium">
-            {note.data.summary}
-          </p>
-        </aside>
-
         <!-- Main Monograph Prose -->
         <div id="article-prose" class="prose-press">
           <Content />
         </div>
 
         <!-- Ornamental Colophon End-Mark & Minimal Mastery Toggle -->
-        <div class="mt-16 pt-8 border-t border-[#dfdace] flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-          <div class="flex items-center gap-3 text-[#757268]">
+        <div class="mt-16 pt-8 border-t border-[#c8cbc3] flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div class="flex items-center gap-3 text-[#5f646d]">
             <svg class="w-4 h-5 opacity-75" viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.6">
               <rect x="4" y="3" width="16" height="24" rx="8" />
               <rect x="7.5" y="6.5" width="9" height="10" rx="4.5" />
               <line x1="7.5" y1="12" x2="7.5" y2="23.5" />
             </svg>
-            <span class="font-mono-meta text-[10.5px] tracking-[0.16em] uppercase">
-              END OF CHAPTER {String(currentIdx + 1).padStart(2, '0')}
+            <span class="font-mono-meta text-[10.5px] tracking-[0.14em] uppercase">
+              SECTION {sectionCode} · {chapterTitle}
             </span>
           </div>
 
@@ -180,35 +214,35 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
             id="toggle-mastery-btn"
             data-current-slug={note.id}
             type="button"
-            class="inline-flex items-center justify-center gap-2 px-4 py-2 font-mono-meta text-[11px] tracking-[0.1em] uppercase border border-[#141820] text-[#141820] hover:bg-[#141820] hover:text-[#f9f7f1] transition cursor-pointer"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2 font-mono-meta text-[11px] tracking-[0.1em] uppercase border border-[#272a2e] text-[#272a2e] hover:bg-[#272a2e] hover:text-[#e4e5e0] transition cursor-pointer"
           >
             标记为已掌握
           </button>
         </div>
 
-        <!-- Clean Unboxed Chapter Navigation -->
-        {(prevNote || nextNote) && (
-          <nav class="mt-10 pt-8 border-t border-[#e6e2d7] grid grid-cols-1 sm:grid-cols-2 gap-8">
-            {prevNote ? (
-              <a href={`/notes/${prevNote.id}`} class="group block space-y-1.5">
-                <div class="font-mono-meta text-[10px] tracking-[0.16em] uppercase text-[#757268]">
-                  ← PREVIOUS
+        <!-- Seamless Cross-Chapter Navigation -->
+        {(prevEntry || nextEntry) && (
+          <nav class="mt-10 pt-8 border-t border-[#cdcfc8] grid grid-cols-1 sm:grid-cols-2 gap-8">
+            {prevEntry ? (
+              <a href={`/notes/${prevEntry.note.id}`} class="group block space-y-1.5">
+                <div class="font-mono-meta text-[10px] tracking-[0.14em] text-[#5f646d]">
+                  ← PREVIOUS · {prevEntry.sectionCode} {prevEntry.chapterTitle}
                 </div>
-                <div class="font-editorial text-xl font-bold text-[#141820] group-hover:underline underline-offset-4 decoration-[#bfb9aa]">
-                  {prevNote.data.title}
+                <div class="font-note-heading text-base font-semibold text-[#1b1e23] group-hover:underline underline-offset-4 decoration-[#9ea39d]">
+                  {prevEntry.note.data.title}
                 </div>
               </a>
             ) : (
               <div></div>
             )}
 
-            {nextNote && (
-              <a href={`/notes/${nextNote.id}`} class="group block space-y-1.5 text-left sm:text-right">
-                <div class="font-mono-meta text-[10px] tracking-[0.16em] uppercase text-[#757268]">
-                  NEXT →
+            {nextEntry && (
+              <a href={`/notes/${nextEntry.note.id}`} class="group block space-y-1.5 text-left sm:text-right">
+                <div class="font-mono-meta text-[10px] tracking-[0.14em] text-[#5f646d]">
+                  NEXT · {nextEntry.sectionCode} {nextEntry.chapterTitle} →
                 </div>
-                <div class="font-editorial text-xl font-bold text-[#141820] group-hover:underline underline-offset-4 decoration-[#bfb9aa]">
-                  {nextNote.data.title}
+                <div class="font-note-heading text-base font-semibold text-[#1b1e23] group-hover:underline underline-offset-4 decoration-[#9ea39d]">
+                  {nextEntry.note.data.title}
                 </div>
               </a>
             )}
@@ -220,16 +254,16 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
       <aside class="hidden xl:block sticky top-24">
         {tocHeadings.length > 0 && (
           <div class="space-y-3">
-            <div class="font-mono-meta text-[10px] tracking-[0.18em] uppercase text-[#757268]">
+            <div class="font-mono-meta text-[10px] tracking-[0.18em] uppercase text-[#5f646d]">
               [ ON THIS PAGE ]
             </div>
-            <ul id="toc-list" class="space-y-2 border-l border-[#e6e2d7] pl-3.5">
+            <ul id="toc-list" class="space-y-2 border-l border-[#c8cbc3] pl-3.5">
               {tocHeadings.map((h) => (
                 <li class={h.depth === 3 ? 'pl-2.5' : ''}>
                   <a
                     href={`#${h.slug}`}
                     data-toc-link={h.slug}
-                    class="block text-xs text-[#757268] hover:text-[#141820] leading-snug transition"
+                    class="block text-xs text-[#5f646d] hover:text-[#1b1e23] leading-snug transition"
                   >
                     {h.text}
                   </a>
@@ -244,7 +278,6 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
 </BaseLayout>
 
 <script>
-  // 1. Mastery Toggle + Sidebar Checkmarks
   const btn = document.getElementById('toggle-mastery-btn');
   const currentSlug = btn?.getAttribute('data-current-slug') || '';
 
@@ -255,10 +288,10 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
     if (btn) {
       if (isDone) {
         btn.textContent = '✓ 已掌握';
-        btn.className = 'inline-flex items-center justify-center gap-2 px-4 py-2 font-mono-meta text-[11px] tracking-[0.1em] uppercase border border-[#244237] bg-[#244237] text-[#f9f7f1] hover:opacity-90 transition cursor-pointer';
+        btn.className = 'inline-flex items-center justify-center gap-2 px-4 py-2 font-mono-meta text-[11px] tracking-[0.1em] uppercase border border-[#244237] bg-[#244237] text-[#e4e5e0] hover:opacity-90 transition cursor-pointer';
       } else {
         btn.textContent = '标记为已掌握';
-        btn.className = 'inline-flex items-center justify-center gap-2 px-4 py-2 font-mono-meta text-[11px] tracking-[0.1em] uppercase border border-[#141820] text-[#141820] hover:bg-[#141820] hover:text-[#f9f7f1] transition cursor-pointer';
+        btn.className = 'inline-flex items-center justify-center gap-2 px-4 py-2 font-mono-meta text-[11px] tracking-[0.1em] uppercase border border-[#272a2e] text-[#272a2e] hover:bg-[#272a2e] hover:text-[#e4e5e0] transition cursor-pointer';
       }
     }
 
@@ -276,7 +309,7 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
   syncNoteMastery();
   window.addEventListener('pebble:mastery-changed', syncNoteMastery);
 
-  // 2. Subtle Hairline Reading Progress Bar
+  // Reading Progress Bar
   const progressBar = document.getElementById('reading-progress-bar');
   function updateProgress() {
     if (!progressBar) return;
@@ -288,7 +321,7 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
   window.addEventListener('scroll', updateProgress, { passive: true });
   updateProgress();
 
-  // 3. Scroll-Spy Highlighting for Right TOC
+  // Scroll-Spy TOC
   const tocLinks = Array.from(document.querySelectorAll('[data-toc-link]'));
   const headingEls = tocLinks
     .map((a) => document.getElementById(a.getAttribute('data-toc-link') || ''))
@@ -302,9 +335,9 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
         const id = visible.target.id;
         tocLinks.forEach((link) => {
           const isAct = link.getAttribute('data-toc-link') === id;
-          link.classList.toggle('text-[#141820]', isAct);
+          link.classList.toggle('text-[#1b1e23]', isAct);
           link.classList.toggle('font-medium', isAct);
-          link.classList.toggle('text-[#757268]', !isAct);
+          link.classList.toggle('text-[#5f646d]', !isAct);
         });
       },
       { rootMargin: '-80px 0px -70% 0px' }
@@ -312,7 +345,7 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
     headingEls.forEach((h) => observer.observe(h));
   }
 
-  // 4. Unobtrusive Hover-Revealed Copy Button on Code Exhibits
+  // Copy Button on Code Exhibits
   document.querySelectorAll('#article-prose pre').forEach((pre) => {
     const wrap = document.createElement('div');
     wrap.className = 'code-block-wrap group';
@@ -322,7 +355,7 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
     const copyBtn = document.createElement('button');
     copyBtn.type = 'button';
     copyBtn.textContent = 'COPY';
-    copyBtn.className = 'absolute top-2.5 right-2.5 font-mono-meta text-[10px] tracking-[0.12em] px-2 py-0.5 rounded-[3px] bg-[#f9f7f1]/90 text-[#6f6c63] hover:text-[#141820] border border-[#dcd7ca] opacity-70 group-hover:opacity-100 transition cursor-pointer';
+    copyBtn.className = 'absolute top-2.5 right-2.5 font-mono-meta text-[10px] tracking-[0.12em] px-2 py-0.5 rounded-[3px] bg-[#e4e5e0]/90 text-[#595e66] hover:text-[#1b1e23] border border-[#bfc2ba] opacity-70 group-hover:opacity-100 transition cursor-pointer';
     copyBtn.addEventListener('click', async () => {
       const code = pre.querySelector('code')?.textContent || pre.textContent || '';
       try {

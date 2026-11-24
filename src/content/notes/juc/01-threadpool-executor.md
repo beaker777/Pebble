@@ -2,10 +2,10 @@
 title: ThreadPoolExecutor 七大参数与拒绝策略
 subtitle: 任务提交流转顺序，以及为什么严禁线上直接使用 Executors 工厂方法？
 volume: juc
+chapter: 线程池与并发容器
 order: 1
 frequency: 高频必问
 readTime: 4 min
-summary: 新任务提交严格遵循「核心线程 → 阻塞队列 → 最大线程 → 拒绝策略」四步流转；生产环境必须手动构造 ThreadPoolExecutor，使用有界队列并自定义业务可读的线程名前缀。
 tags: [线程池, 并发编程, 生产实践]
 updatedAt: 2026-11-24
 ---

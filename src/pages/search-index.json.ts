@@ -1,31 +1,31 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { VOLUME_MAP } from '../data/volumes';
+import { VOLUMES } from '../data/volumes';
+import { buildVolumeChapters } from '../utils/chapters';
 
 export const GET: APIRoute = async () => {
-  const notes = await getCollection('notes');
+  const [allNotes, allChapterConfigs] = await Promise.all([
+    getCollection('notes'),
+    getCollection('chapterConfigs'),
+  ]);
+  const items = [];
 
-  const items = notes
-    .sort((a, b) => {
-      if (a.data.volume !== b.data.volume) {
-        return a.data.volume.localeCompare(b.data.volume);
-      }
-      return a.data.order - b.data.order;
-    })
-    .map((note) => {
-      const vol = VOLUME_MAP[note.data.volume];
-      return {
-        slug: note.id,
-        title: note.data.title,
-        summary: note.data.summary,
-        volume: note.data.volume,
+  for (const vol of VOLUMES) {
+    const { flatArticles } = buildVolumeChapters(vol, allNotes, allChapterConfigs);
+    for (const entry of flatArticles) {
+      items.push({
+        slug: entry.note.id,
+        title: entry.note.data.title,
+        volume: vol.id,
         volumeNumber: `VOL. ${vol.number}`,
         volumeTitle: vol.title,
-        volumeColor: vol.coverBg,
-        frequency: note.data.frequency,
-        tags: note.data.tags,
-      };
-    });
+        volumeColor: vol.designKey === 'juc' ? '#1D4491' : vol.designKey === 'spring' ? '#4D6658' : vol.coverBg,
+        chapter: entry.chapterTitle,
+        sectionCode: entry.sectionCode,
+        tags: entry.note.data.tags,
+      });
+    }
+  }
 
   return new Response(JSON.stringify(items), {
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
