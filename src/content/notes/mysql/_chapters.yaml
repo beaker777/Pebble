@@ -3,6 +3,20 @@
 #   1. 极简写法：- 章节名
 #   2. 带副标题：- title: 章节名 / subtitle: 副标题
 chapters:
+  - title: Basic
+
   - title: Infrastructure
 
+  - title: Storage Engine
+
+  - title: Log
+
+  - title: SQL Optimization
+
   - title: Index
+
+  - title: Lock
+
+  - title: Transaction
+
+  - title: High Availability

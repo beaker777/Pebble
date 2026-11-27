@@ -1,8 +1,8 @@
 ---
 title: 在什么情况下你依然会考虑使用 MyISAM ?
 volume: mysql
-chapter: Infrastructure
-order: 4
+chapter: Storage Engine
+order: 2
 updatedAt: 2026-11-24
 ---
 

@@ -19,7 +19,7 @@ export const GET: APIRoute = async () => {
         volume: vol.id,
         volumeNumber: `VOL. ${vol.number}`,
         volumeTitle: vol.title,
-        volumeColor: vol.designKey === 'juc' ? '#1D4491' : vol.designKey === 'spring' ? '#4D6658' : vol.coverBg,
+        volumeColor: vol.coverBg,
         chapter: entry.chapterTitle,
         sectionCode: entry.sectionCode,
         tags: entry.note.data.tags,

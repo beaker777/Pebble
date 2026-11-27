@@ -32,7 +32,7 @@ const prevEntry = currentIdx > 0 ? flatArticles[currentIdx - 1] : null;
 const nextEntry = currentIdx >= 0 && currentIdx < flatArticles.length - 1 ? flatArticles[currentIdx + 1] : null;
 
 const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
-const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 'spring' ? '#4D6658' : volume.coverBg;
+const accentInk = volume.coverBg;
 const chapterLabel = currentEntry ? String(currentEntry.chapterIndex).padStart(2, '0') : '01';
 const sectionCode = currentEntry?.sectionCode || '1.1';
 const chapterTitle = currentEntry?.chapterTitle || note.data.chapter;
@@ -102,7 +102,7 @@ const chapterTitle = currentEntry?.chapterTitle || note.data.chapter;
           {chapters.map((chapter) => {
             const hasActive = chapter.items.some((item) => item.note.id === note.id);
             return (
-              <details open class="group/ch">
+              <details open={hasActive} class="group/ch">
                 <summary class="list-none cursor-pointer flex items-center justify-between gap-2 py-1.5 select-none">
                   <div class="min-w-0">
                     <div class="font-mono-meta text-[9.5px] tracking-[0.16em] uppercase text-[#6a6f78]">

@@ -24,7 +24,7 @@ const [allNotes, allChapterConfigs] = await Promise.all([
 const { chapters, flatArticles } = buildVolumeChapters(volume, allNotes, allChapterConfigs);
 
 const firstArticle = flatArticles[0];
-const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 'spring' ? '#4D6658' : volume.coverBg;
+const accentInk = volume.coverBg;
 ---
 
 <BaseLayout title={`${volume.title} — Pebble Press`}>
@@ -141,73 +141,84 @@ const accentInk = volume.designKey === 'juc' ? '#1D4491' : volume.designKey === 
         </span>
       </div>
 
-      <!-- Chapter Blocks -->
-      <div class="mt-12 space-y-14">
-        {chapters.map((chapter) => (
-          <div data-chapter-block={chapter.chapterIndex}>
-            <!-- Chapter Header -->
-            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-4 border-b border-[#c2c5bd]">
-              <div>
-                <div class="flex items-center gap-2.5 font-mono-meta text-[10.5px] tracking-[0.18em] uppercase text-[#5f646d]">
-                  <span class="w-2 h-2 rounded-full inline-block" style={`background-color: ${accentInk};`}></span>
-                  <span>CHAPTER {chapter.numberLabel}</span>
+      <!-- Chapter Blocks or Quiet Empty State -->
+      {chapters.length === 0 ? (
+        <div class="mt-14 py-14 border-y border-[#c8cbc3] text-center space-y-2.5">
+          <div class="font-mono-meta text-[11px] tracking-[0.18em] uppercase text-[#5f646d]">
+            [ EMPTY VOLUME · 待编排 ]
+          </div>
+          <p class="text-[14.5px] text-[#4a4f57]">
+            本册尚未收录笔记，在 <code class="font-mono-meta text-xs bg-[#d4d7cf] text-[#272a2e] px-1.5 py-0.5 rounded">src/content/notes/{volume.id}/</code> 添加 Markdown 文件后即自动生成章节目录。
+          </p>
+        </div>
+      ) : (
+        <div class="mt-12 space-y-14">
+          {chapters.map((chapter) => (
+            <div data-chapter-block={chapter.chapterIndex}>
+              <!-- Chapter Header -->
+              <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 pb-4 border-b border-[#c2c5bd]">
+                <div>
+                  <div class="flex items-center gap-2.5 font-mono-meta text-[10.5px] tracking-[0.18em] uppercase text-[#5f646d]">
+                    <span class="w-2 h-2 rounded-full inline-block" style={`background-color: ${accentInk};`}></span>
+                    <span>CHAPTER {chapter.numberLabel}</span>
+                  </div>
+                  <h3 class="font-note-heading text-xl sm:text-[1.48rem] font-semibold text-[#1b1e23] mt-1 leading-tight">
+                    {chapter.title}
+                  </h3>
+                  {chapter.subtitle && (
+                    <p class="text-[13.5px] text-[#595e66] mt-1">
+                      {chapter.subtitle}
+                    </p>
+                  )}
                 </div>
-                <h3 class="font-note-heading text-xl sm:text-[1.48rem] font-semibold text-[#1b1e23] mt-1 leading-tight">
-                  {chapter.title}
-                </h3>
-                {chapter.subtitle && (
-                  <p class="text-[13.5px] text-[#595e66] mt-1">
-                    {chapter.subtitle}
-                  </p>
-                )}
+
+                <div class="font-mono-meta text-[11px] text-[#5f646d] shrink-0">
+                  <span data-chapter-mastery={chapter.chapterIndex}>0</span> / {chapter.items.length} 已掌握
+                </div>
               </div>
 
-              <div class="font-mono-meta text-[11px] text-[#5f646d] shrink-0">
-                <span data-chapter-mastery={chapter.chapterIndex}>0</span> / {chapter.items.length} 已掌握
-              </div>
-            </div>
-
-            <!-- Articles Under This Chapter -->
-            <div class="divide-y divide-[#cfd2ca]">
-              {chapter.items.map((item) => (
-                <a
-                  href={`/notes/${item.note.id}`}
-                  data-vol-note-slug={item.note.id}
-                  data-vol-chapter-idx={chapter.chapterIndex}
-                  class="group block py-4 sm:pl-4 transition"
-                >
-                  <div class="grid grid-cols-12 gap-4 items-baseline">
-                    <div class="col-span-2 sm:col-span-1">
-                      <span class="font-mono-meta text-sm font-medium text-[#6f747d] group-hover:text-[#1b1e23] transition">
-                        {item.sectionCode}
-                      </span>
-                    </div>
-
-                    <div class="col-span-10 sm:col-span-9 space-y-1">
-                      <div class="flex flex-wrap items-center gap-3">
-                        <h4 class="font-note-heading text-[1.05rem] sm:text-[1.12rem] font-semibold text-[#1f2329] group-hover:underline underline-offset-4 decoration-[#9ea39d] transition">
-                          {item.note.data.title}
-                        </h4>
-                        <span data-vol-check={item.note.id} class="font-mono-meta text-xs" style={`color:${accentInk};`}></span>
+              <!-- Articles Under This Chapter -->
+              <div class="divide-y divide-[#cfd2ca]">
+                {chapter.items.map((item) => (
+                  <a
+                    href={`/notes/${item.note.id}`}
+                    data-vol-note-slug={item.note.id}
+                    data-vol-chapter-idx={chapter.chapterIndex}
+                    class="group block py-4 sm:pl-4 transition"
+                  >
+                    <div class="grid grid-cols-12 gap-4 items-baseline">
+                      <div class="col-span-2 sm:col-span-1">
+                        <span class="font-mono-meta text-sm font-medium text-[#6f747d] group-hover:text-[#1b1e23] transition">
+                          {item.sectionCode}
+                        </span>
                       </div>
 
-                      {item.note.data.tags.length > 0 && (
-                        <div class="flex flex-wrap items-center gap-2 pt-0.5 font-mono-meta text-[11px] text-[#5f646d]">
-                          <span>{item.note.data.tags.join(' / ')}</span>
+                      <div class="col-span-10 sm:col-span-9 space-y-1">
+                        <div class="flex flex-wrap items-center gap-3">
+                          <h4 class="font-note-heading text-[1.05rem] sm:text-[1.12rem] font-semibold text-[#1f2329] group-hover:underline underline-offset-4 decoration-[#9ea39d] transition">
+                            {item.note.data.title}
+                          </h4>
+                          <span data-vol-check={item.note.id} class="font-mono-meta text-xs" style={`color:${accentInk};`}></span>
                         </div>
-                      )}
-                    </div>
 
-                    <div class="hidden sm:flex col-span-2 items-center justify-end font-mono-meta text-[11px] text-[#5f646d]">
-                      <span class="text-[#1b1e23] opacity-0 group-hover:opacity-100 transition">READ →</span>
+                        {item.note.data.tags.length > 0 && (
+                          <div class="flex flex-wrap items-center gap-2 pt-0.5 font-mono-meta text-[11px] text-[#5f646d]">
+                            <span>{item.note.data.tags.join(' / ')}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div class="hidden sm:flex col-span-2 items-center justify-end font-mono-meta text-[11px] text-[#5f646d]">
+                        <span class="text-[#1b1e23] opacity-0 group-hover:opacity-100 transition">READ →</span>
+                      </div>
                     </div>
-                  </div>
-                </a>
-              ))}
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   </div>
 </BaseLayout>

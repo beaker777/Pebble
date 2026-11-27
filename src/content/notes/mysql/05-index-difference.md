@@ -1,8 +1,8 @@
 ---
 title: InnoDB 和 MyISAM 在索引数据结构上有什么本质区别 ?
 volume: mysql
-chapter: Infrastructure
-order: 5
+chapter: Storage Engine
+order: 3
 updatedAt: 2026-11-24
 ---
 

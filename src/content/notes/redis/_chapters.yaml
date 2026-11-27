@@ -1,7 +1,0 @@
-# 章节顺序配置：按从上到下排列即为本书的 CHAPTER 01, 02, 03...
-# 支持极简写法（- 章节名）或带副标题写法（title + subtitle）
-chapters:
-  - title: 持久化与内存管理
-    subtitle: RDB/AOF 混合持久化、淘汰策略与底层数据结构
-  - title: 高并发缓存架构
-    subtitle: 穿透击穿雪崩治理、双写一致性与分布式锁

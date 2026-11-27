@@ -1,8 +1,8 @@
 ---
 title: InnoDB 和 MYISAM 的主要区别是什么 ?
 volume: mysql
-chapter: Infrastructure
-order: 3
+chapter: Storage Engine
+order: 1
 updatedAt: 2026-11-24
 ---
 

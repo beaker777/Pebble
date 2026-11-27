@@ -1,7 +1,0 @@
-# 章节顺序配置：按从上到下排列即为本书的 CHAPTER 01, 02, 03...
-# 支持极简写法（- 章节名）或带副标题写法（title + subtitle）
-chapters:
-  - title: IoC 容器与 Bean 生命周期
-    subtitle: 实例化、依赖注入、三级缓存与扩展点
-  - title: AOP 与声明式事务
-    subtitle: 动态代理机制、传播行为与常见事务失效排查

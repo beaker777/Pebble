@@ -4,10 +4,8 @@ import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 
 const VOLUMES = [
-  { id: 'mysql', label: '01 · MySQL', chapters: ['Infrastructure', '索引与查询优化', '事务、锁与 MVCC'] },
-  { id: 'redis', label: '02 · Redis', chapters: ['持久化与内存管理', '高并发缓存架构'] },
-  { id: 'juc', label: '03 · JUC', chapters: ['同步器与锁机制', '线程池与并发容器'] },
-  { id: 'spring', label: '04 · Spring', chapters: ['IoC 容器与 Bean 生命周期', 'AOP 与声明式事务'] },
+  { id: 'mysql', label: '01 · MySQL', chapters: ['Basic', 'Infrastructure', 'Storage Engine'] },
+  { id: 'rag', label: '02 · RAG', chapters: [] },
 ];
 
 const rl = readline.createInterface({ input, output });
@@ -108,11 +106,15 @@ try {
 
   const chapters = collectExistingChapters(vol.id, vol.chapters);
   console.log(`\n📂 ${vol.label} 现有章节（按当前显示顺序）：`);
-  chapters.forEach((c, i) => console.log(`  [${i + 1}] ${c}`));
+  if (chapters.length === 0) {
+    console.log('  (当前暂无章节，将创建本书第一章)');
+  } else {
+    chapters.forEach((c, i) => console.log(`  [${i + 1}] ${c}`));
+  }
   console.log('  [0] 新建一个章节');
 
-  const chChoice = (await rl.question('\n请选择章节编号 (默认 1): ')).trim() || '1';
-  let chapter = chapters[0];
+  const chChoice = (await rl.question(`\n请选择章节编号 (默认 ${chapters.length === 0 ? 0 : 1}): `)).trim() || (chapters.length === 0 ? '0' : '1');
+  let chapter = chapters[0] || '核心专题';
   if (chChoice === '0') {
     const customCh = (await rl.question('请输入新章节名称 (如: 日志与主从复制): ')).trim();
     chapter = customCh || '核心专题';

@@ -6,7 +6,7 @@ const notes = defineCollection({
   schema: z.object({
     title: z.string(),
     subtitle: z.string().optional(),
-    volume: z.enum(['mysql', 'redis', 'juc', 'spring']),
+    volume: z.enum(['mysql', 'rag']),
     chapter: z.string().default('核心专题'),
     chapterOrder: z.number().optional(),
     order: z.number().default(99),
